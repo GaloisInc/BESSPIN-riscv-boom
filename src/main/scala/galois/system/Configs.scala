@@ -26,9 +26,11 @@ import boom.system._
 
 class BoomP3FPGAConfig extends Config(
    new WithRVC ++
+   new WithSmallBooms ++
    new DefaultBoomConfig ++
    new WithNBoomCores(1) ++
    new WithoutTLMonitors ++
-   new freechips.rocketchip.system.BaseConfig)
+   new freechips.rocketchip.system.BaseConfig ++
+   new WithJtagDTM)
 
 
