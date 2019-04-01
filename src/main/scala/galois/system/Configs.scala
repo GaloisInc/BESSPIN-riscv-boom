@@ -21,10 +21,20 @@ import freechips.rocketchip.util._
 import boom.common._
 import boom.system.WithNBoomCores
 import boom.system._
+import freechips.rocketchip.galois.devices._
 
 // scalastyle:off
 
+class WithXilinxJtag extends Config ((site, here, up) => {
+  // Xilinx requires an IR length of 18, special register addresses, and latching TDO on positive edge
+  case JtagDTMKey => new JtagDTMConfig(
+    idcodeVersion = 0, idcodePartNum = 0, idcodeManufId = 0, debugIdleCycles = 5,
+    irLength = 18, tdoOnNegEdge = false, registerAddrs = new xilinxAddrs()
+  )
+})
+
 class BoomP3FPGAConfig extends Config(
+   new WithXilinxJtag ++
    new WithRVC ++
    new WithSmallBooms ++
    new DefaultBoomConfig ++
