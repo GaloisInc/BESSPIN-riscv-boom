@@ -1424,9 +1424,9 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
          // To allow for diffs against spike :/
          def printf_inst(uop: MicroOp) = {
             when (uop.is_rvc) {
-               printf("(0x%x)", uop.inst(15,0))
+               printf("DASM(0x%x)", uop.inst(15,0))
             } .otherwise {
-               printf("(0x%x)", uop.inst)
+               printf("DASM(0x%x)", uop.inst)
             }
          }
          when (rob.io.commit.valids(w))

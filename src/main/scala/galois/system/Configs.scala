@@ -37,12 +37,12 @@ class BoomP3FPGAConfig extends Config(
    new WithXilinxJtag ++
    new WithRVC ++
    new WithGFECLINT ++
-   new WithSmallBooms ++
    new DefaultBoomConfig ++
    new WithNBoomCores(1) ++
    new WithoutTLMonitors ++
    new WithNExtTopInterrupts(16) ++
-   new freechips.rocketchip.system.BaseConfig ++
-   new WithJtagDTM)
+   new WithJtagDTM ++
+   new freechips.rocketchip.system.BaseConfig
+   )
 
 
