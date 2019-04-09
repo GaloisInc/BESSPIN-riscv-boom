@@ -23,8 +23,7 @@ class P3System(implicit p: Parameters) extends BoomSubsystem
     with HasAsyncExtInterrupts
     with CanHaveMisalignedMasterAXI4MemPort
     with CanHaveMasterAXI4MMIOPort
-    with CanHaveSlaveAXI4Port
-    with HasPeripheryBootROM {
+    with CanHaveSlaveAXI4Port {
   override lazy val module = new P3SystemModule(this)
 
   // Error device used for testing and to NACK invalid front port transactions
@@ -33,11 +32,17 @@ class P3System(implicit p: Parameters) extends BoomSubsystem
   sbus.coupleTo("slave_named_error"){ error.node := TLBuffer() := _ }
 }
 
+/** Subsystem will power-on running at 0x7000_0000 (AXI Boot ROM) */
+trait HasGaloisGFEResetVectorImp extends LazyModuleImp
+  with HasResetVectorWire {
+  global_reset_vector := 0x70000000L.U
+}
+
 class P3SystemModule[+L <: P3System](_outer: L) extends BoomSubsystemModule(_outer)
     with HasRTCModuleImp
     with HasExtInterruptsModuleImp
+    with HasGaloisGFEResetVectorImp
     with CanHaveMisalignedMasterAXI4MemPortModuleImp
     with CanHaveMasterAXI4MMIOPortModuleImp
     with CanHaveSlaveAXI4PortModuleImp
-    with HasPeripheryBootROMModuleImp
     with DontTouch
