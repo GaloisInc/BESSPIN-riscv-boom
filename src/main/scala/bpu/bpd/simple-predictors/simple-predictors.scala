@@ -1,5 +1,5 @@
 //******************************************************************************
-// Copyright (c) 2015 - 2018, The Regents of the University of California (Regents).
+// Copyright (c) 2015 - 2019, The Regents of the University of California (Regents).
 // All Rights Reserved. See LICENSE and LICENSE.SiFive for license details.
 //------------------------------------------------------------------------------
 // Author: Christopher Celio
@@ -7,7 +7,7 @@
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-// RISCV Simple Predictor Classes
+// Simple Predictor Classes
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
@@ -32,12 +32,12 @@ import boom.util.ElasticReg
  * @param history_length length of the BHR in bits
  */
 class NullBrPredictor(
-   history_length: Int = 12
-   )(implicit p: Parameters) extends BoomBrPredictor(history_length)(p)
+  history_length: Int = 12
+  )(implicit p: Parameters) extends BoomBrPredictor(history_length)
 {
-   override def toString: String = "   ==Null BPU==" +
-     "\n   Building (0 kB) Null Predictor (never predict)."
-   io.resp.valid := false.B
+  override def toString: String = "   ==Null BPU==" +
+    "\n   Building (0 kB) Null Predictor (never predict)."
+  io.resp.valid := false.B
 }
 
 /**
@@ -55,30 +55,29 @@ case class RandomBpdParameters(
  */
 object RandomBrPredictor
 {
-   def GetRespInfoSize(p: Parameters): Int =
-   {
-      // Should be zero (no RespInfo needed for Random predictor), but avoid 0-width wires.
-      1
-   }
+  def GetRespInfoSize(p: Parameters): Int = {
+    // Should be zero (no RespInfo needed for Random predictor), but avoid 0-width wires.
+    1
+  }
 }
 
 /**
  * Class to create a Random predictor that generates random predictions. Good for testing!
  */
 class RandomBrPredictor(
-   )(implicit p: Parameters) extends BoomBrPredictor(history_length = 1)(p)
+  )(implicit p: Parameters) extends BoomBrPredictor(history_length = 1)
 {
-   override def toString: String = "   ==Random BPU==" +
-     "\n  Building Random Branch Predictor."
-   private val rand_val = RegInit(false.B)
-   rand_val := ~rand_val
-   private var lfsr= LFSR16(true.B)
-   def rand(width: Int) = {
-        lfsr = lfsr(lfsr.getWidth-1,1)
-        val mod = (1 << width) - 1
-          freechips.rocketchip.util.Random(mod, lfsr)
-   }
+  override def toString: String = "   ==Random BPU==" +
+    "\n  Building Random Branch Predictor."
+  private val rand_val = RegInit(false.B)
+  rand_val := ~rand_val
+  private var lfsr= LFSR16(true.B)
+  def rand(width: Int) = {
+    lfsr = lfsr(lfsr.getWidth-1,1)
+    val mod = (1 << width) - 1
+    freechips.rocketchip.util.Random(mod, lfsr)
+  }
 
-   io.resp.valid := rand_val
-   io.resp.bits.takens := rand(fetchWidth)
+  io.resp.valid := rand_val
+  io.resp.bits.takens := rand(fetchWidth)
 }
