@@ -25,7 +25,7 @@ import chisel3.core.withReset
 import freechips.rocketchip.config.{Parameters, Field}
 
 import boom.common._
-import boom.util.{PrintUtil, ElasticReg, Fold}
+import boom.util.{ElasticReg, Fold}
 
 /**
  * GShare configuration parameters used in configurations

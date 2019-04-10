@@ -32,7 +32,6 @@ import freechips.rocketchip.util.{Str}
 
 import boom.common._
 import boom.exu._
-import boom.util.{PrintUtil}
 
 case class BimParameters(
   nSets: Int = 1024, // how many sets (conceptually) should we have?
@@ -220,7 +219,7 @@ class BimodalTable(implicit p: Parameters) extends BoomModule with HasBimParamet
 
   for (w <- 0 until nBanks) {
     val ram = SyncReadMem(nSets/nBanks, Vec(row_sz, Bool()))
-    ram.suggestName("bimDataArray")
+    ram.suggestName("bim_data_array")
 
     val ren = Wire(Bool())
     val s2_rmw_valid = Wire(Bool())
@@ -253,11 +252,7 @@ class BimodalTable(implicit p: Parameters) extends BoomModule with HasBimParamet
 
     wq.io.deq.ready := !p_will_read
 
-    if (DEBUG_PRINTF) {
-      printf("    Bank[%d]: REN:%c ",
-             w.U,
-             PrintUtil.ConvertChar(ren, 'R'))
-    }
+    if (DEBUG_PRINTF) printf("BIM bank[" + w + "] (r:%d ", ren)
 
     val wen = ((wq.io.deq.valid && !ren) || fsm_state === s_clear)
     when (wen) {

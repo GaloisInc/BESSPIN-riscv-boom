@@ -31,7 +31,7 @@ import freechips.rocketchip.rocket.{RocketCoreParams}
 import boom.common._
 import boom.exu._
 import boom.exu.{BranchUnitResp}
-import boom.util.{ElasticReg, PrintUtil}
+import boom.util.{ElasticReg}
 
 /**
  * This is the response packet from the branch predictor. The predictor is

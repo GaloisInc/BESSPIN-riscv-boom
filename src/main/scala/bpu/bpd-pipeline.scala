@@ -32,7 +32,6 @@ import freechips.rocketchip.util.{Str, UIntToAugmentedUInt}
 
 import boom.common._
 import boom.exu.{BranchUnitResp}
-import boom.util.{PrintUtil}
 
 /**
  * Give this to each instruction/uop and pass this down the pipeline to the branch unit

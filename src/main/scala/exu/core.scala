@@ -37,12 +37,11 @@ import chisel3.experimental.dontTouch
 import freechips.rocketchip.config.Parameters
 import freechips.rocketchip.rocket.Instructions._
 import freechips.rocketchip.rocket.Causes
-import freechips.rocketchip.rocket.PRV
 import freechips.rocketchip.util.{Str, UIntIsOneOf}
 
 import boom.common._
 import boom.exu.FUConstants._
-import boom.util.{PrintUtil, GetNewUopAndBrMask, Sext, WrapInc}
+import boom.util.{GetNewUopAndBrMask, Sext, WrapInc}
 
 /**
  * IO bundle for the BOOM Core. Connects the external components such as
@@ -162,18 +161,18 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    val bypasses       = Wire(new BypassData(exe_units.num_total_bypass_ports, xLen))
 
    // Branch Unit
-   val br_unit_resp = Wire(new BranchUnitResp())
+   val br_unit = Wire(new BranchUnitResp())
    val brunit_idx = exe_units.br_unit_idx
-   br_unit_resp <> exe_units.br_unit_io
+   br_unit <> exe_units.br_unit_io
 
    for (eu <- exe_units)
    {
-      eu.io.brinfo        := br_unit_resp.brinfo
+      eu.io.brinfo        := br_unit.brinfo
       eu.io.com_exception := rob.io.flush.valid
    }
    if (usingFPU)
    {
-      fp_pipeline.io.brinfo := br_unit_resp.brinfo
+      fp_pipeline.io.brinfo := br_unit.brinfo
    }
 
    // Shim to DCache
@@ -185,9 +184,6 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
 
    // TODO: Generate this in lsu
    val sxt_ldMiss = Wire(Bool())
-
-   // mask the Br mispred/resolved with the debug signal
-   val status_debug = Wire(Bool())
 
    //-------------------------------------------------------------
    // Uarch Hardware Performance Events (HPEs)
@@ -226,19 +222,12 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
       new freechips.rocketchip.rocket.EventSet((mask, hits) => (mask & hits).orR, Seq(
          ("I$ blocked",                        () => icache_blocked),
          ("nop",                               () => false.B),
-         ("branch misprediction",              () => br_unit_resp.brinfo.mispredict),
-         ("control-flow target misprediction", () => br_unit_resp.brinfo.mispredict &&
-                                                     br_unit_resp.brinfo.is_jr),
+         ("branch misprediction",              () => br_unit.brinfo.mispredict),
+         ("control-flow target misprediction", () => br_unit.brinfo.mispredict &&
+                                                     br_unit.brinfo.is_jr),
          ("flush",                             () => rob.io.flush.valid),
-         ("branch resolved",                   () => br_unit_resp.brinfo.valid),
-         //("btb blame",                         () => br_unit_resp.brinfo.btb_made_pred),
-         //("bpd blame",                         () => br_unit_resp.brinfo.bpd_made_pred),
-         ("btb blame",                         () => false.B),
-         ("bpd blame",                         () => false.B),
-         //("btb mispreds",                      () => br_unit_resp.brinfo.btb_mispredict),
-         //("bpd mispreds",                      () => br_unit_resp.brinfo.bpd_mispredict))),
-         ("branch misprediction",              () => !status_debug && br_unit_resp.brinfo.mispredict),
-         ("branch resolved",                   () => !status_debug && br_unit_resp.brinfo.valid))),
+         ("branch resolved",                   () => br_unit.brinfo.valid))),
+
          // Unused RocketCore HPE's
          //("load-use interlock",     () => id_ex_hazard && ex_ctrl.mem || id_mem_hazard && mem_ctrl.mem ||
          //                                 id_wb_hazard && wb_ctrl.mem),
@@ -333,8 +322,8 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    //   rob.io.commit.uops(w).stat_brjmp_mispredicted})
 
    //// Count user-level branches (subtract from total to get privilege branch accuracy)
-   //csr.io.events(28) := br_unit_resp.brinfo.valid && (csr.io.status.prv === UInt(freechips.rocketchip.rocket.PRV.U))
-   //csr.io.events(29) := br_unit_resp.brinfo.mispredict && (csr.io.status.prv === UInt(rocket.PRV.U))
+   //csr.io.events(28) := br_unit.brinfo.valid && (csr.io.status.prv === UInt(freechips.rocketchip.rocket.PRV.U))
+   //csr.io.events(29) := br_unit.brinfo.mispredict && (csr.io.status.prv === UInt(rocket.PRV.U))
 
    //// count change of privilege modes
    //csr.io.events(30) := csr.io.status.prv =/= RegNext(csr.io.status.prv)
@@ -412,6 +401,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
      + "\n" + (if (usingFPU) fp_pipeline.toString else "")
      + "\n   DCache Ways           : " + dcacheParams.nWays
      + "\n   DCache Sets           : " + dcacheParams.nSets
+     + "\n   DCache nMSHRs         : " + dcacheParams.nMSHRs
      + "\n   ICache Ways           : " + icacheParams.nWays
      + "\n   ICache Sets           : " + icacheParams.nSets
      + "\n   D-TLB Entries         : " + dcacheParams.nTLBEntries
@@ -428,7 +418,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    //-------------------------------------------------------------
    //-------------------------------------------------------------
 
-   io.ifu.br_unit_resp := br_unit_resp
+   io.ifu.br_unit := br_unit
    io.ifu.tsc_reg := debug_tsc_reg
 
    // SFence needs access to the PC to inject an address into the TLB's CAM port. The ROB
@@ -453,7 +443,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
                                    RegNext(csr.io.evec))
    io.ifu.com_ftq_idx       := rob.io.com_xcpt.bits.ftq_idx
 
-   io.ifu.clear_fetchbuffer := br_unit_resp.brinfo.mispredict ||
+   io.ifu.clear_fetchbuffer := br_unit.brinfo.mispredict ||
                                rob.io.flush.valid ||
                                io.ifu.sfence_take_pc
 
@@ -467,7 +457,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
 
    io.ifu.flush_icache :=
       Range(0,decodeWidth).map{i => rob.io.commit.valids(i) && rob.io.commit.uops(i).is_fencei}.reduce(_|_) ||
-      (br_unit_resp.brinfo.mispredict && br_unit_resp.brinfo.is_jr &&  csr.io.status.debug)
+      (br_unit.brinfo.mispredict && br_unit.brinfo.is_jr &&  csr.io.status.debug)
 
    // Delay sfence to match pushing the sfence.addr into the TLB's CAM port.
    io.ifu.sfence := RegNext(lsu.io.exe_resp.bits.sfence)
@@ -482,7 +472,6 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
 
    io.ifu.status_prv    := csr.io.status.prv
    io.ifu.status_debug  := csr.io.status.debug
-   status_debug         := csr.io.status.debug
 
    //-------------------------------------------------------------
    //-------------------------------------------------------------
@@ -534,7 +523,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
                         || lsu.io.laq_full
                         || lsu.io.stq_full
                         || branch_mask_full(w)
-                        || br_unit_resp.brinfo.mispredict
+                        || br_unit.brinfo.mispredict
                         || rob.io.flush.valid
                         || dec_stall_next_inst
                         || (dec_uops(w).is_fencei && !lsu.io.lsu_fencei_rdy)
@@ -564,7 +553,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    //-------------------------------------------------------------
    // Branch Mask Logic
 
-   dec_brmask_logic.io.brinfo := br_unit_resp.brinfo
+   dec_brmask_logic.io.brinfo := br_unit.brinfo
    dec_brmask_logic.io.flush_pipeline := rob.io.flush.valid
 
    for (w <- 0 until decodeWidth)
@@ -631,7 +620,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    rename_stage.io.dis_inst_can_proceed := dis_readys.toBools
 
    rename_stage.io.kill     := io.ifu.clear_fetchbuffer // mispredict or flush
-   rename_stage.io.brinfo   := br_unit_resp.brinfo
+   rename_stage.io.brinfo   := br_unit.brinfo
 
    rename_stage.io.flush_pipeline := rob.io.flush.valid
    rename_stage.io.debug_rob_empty := rob.io.empty
@@ -711,7 +700,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    for (w <- 0 until decodeWidth)
    {
       dis_valids(w)       := rename_stage.io.ren2_mask(w)
-      dis_uops(w)         := GetNewUopAndBrMask(rename_stage.io.ren2_uops(w), br_unit_resp.brinfo)
+      dis_uops(w)         := GetNewUopAndBrMask(rename_stage.io.ren2_uops(w), br_unit.brinfo)
    }
 
    //-------------------------------------------------------------
@@ -793,7 +782,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    require(iss_idx == exe_units.num_irf_readers)
 
    issue_units.map(_.io.tsc_reg := debug_tsc_reg)
-   issue_units.map(_.io.brinfo := br_unit_resp.brinfo)
+   issue_units.map(_.io.brinfo := br_unit.brinfo)
    issue_units.map(_.io.flush_pipeline := rob.io.flush.valid)
 
    // Load-hit Misspeculations
@@ -820,8 +809,8 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    val mem_resp = mem_unit.io.ll_iresp
 
    when (RegNext(!sxt_ldMiss) && RegNext(RegNext(lsu.io.mem_ldSpecWakeup.valid)) &&
-      !(RegNext(rob.io.flush.valid || (br_unit_resp.brinfo.valid && br_unit_resp.brinfo.mispredict))) &&
-      !(RegNext(RegNext(rob.io.flush.valid || (br_unit_resp.brinfo.valid && br_unit_resp.brinfo.mispredict)))))
+      !(RegNext(rob.io.flush.valid || (br_unit.brinfo.valid && br_unit.brinfo.mispredict))) &&
+      !(RegNext(RegNext(rob.io.flush.valid || (br_unit.brinfo.valid && br_unit.brinfo.mispredict)))))
    {
       assert (mem_resp.valid && mem_resp.bits.uop.ctrl.rf_wen && mem_resp.bits.uop.dst_rtype === RT_FIX,
          "[core] We did not see a RF writeback for a speculative load that claimed no load-miss.")
@@ -857,7 +846,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    iregister_read.io.iss_uops := iss_uops
    iregister_read.io.iss_uops map { u => u.iw_p1_poisoned := false.B; u.iw_p2_poisoned := false.B }
 
-   iregister_read.io.brinfo := br_unit_resp.brinfo
+   iregister_read.io.brinfo := br_unit.brinfo
    iregister_read.io.kill   := rob.io.flush.valid
 
    iregister_read.io.bypass := bypasses
@@ -995,8 +984,8 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    lsu.io.exception := rob.io.flush.valid
 
    // Handle Branch Mispeculations
-   lsu.io.brinfo := br_unit_resp.brinfo
-   dc_shim.io.core.brinfo := br_unit_resp.brinfo
+   lsu.io.brinfo := br_unit.brinfo
+   dc_shim.io.core.brinfo := br_unit.brinfo
 
    new_ldq_idx := lsu.io.new_ldq_idx
    new_stq_idx := lsu.io.new_stq_idx
@@ -1158,12 +1147,13 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    require (f_cnt == rob.num_fpu_ports)
 
    // branch resolution
-   rob.io.brinfo <> br_unit_resp.brinfo
+   rob.io.brinfo <> br_unit.brinfo
 
    // branch unit requests PCs and predictions from ROB during register read
    // (fetch PC from ROB cycle earlier than needed for critical path reasons)
    io.ifu.get_pc.ftq_idx := RegNext(iss_uops(brunit_idx).ftq_idx)
    exe_units(brunit_idx).io.get_ftq_pc.fetch_pc       := RegNext(io.ifu.get_pc.fetch_pc)
+   exe_units(brunit_idx).io.get_ftq_pc.next_val       := RegNext(io.ifu.get_pc.next_val)
    exe_units(brunit_idx).io.get_ftq_pc.next_pc        := RegNext(io.ifu.get_pc.next_pc)
    exe_units(brunit_idx).io.status := csr.io.status
 
@@ -1176,7 +1166,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
 
    assert (!(csr.io.singleStep), "[core] single-step is unsupported.")
 
-   rob.io.bxcpt <> br_unit_resp.xcpt
+   rob.io.bxcpt <> br_unit.xcpt
 
    //-------------------------------------------------------------
    // **** Flush Pipeline ****
@@ -1216,22 +1206,6 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    //-------------------------------------------------------------
    //-------------------------------------------------------------
 
-   if (BPU_PRINTF)
-   {
-      printf("--- Cycle=%d --- Retired Instrs=%d ----------------------------------------------\n",
-             debug_tsc_reg,
-             debug_irt_reg & (0xffffff).U)
-
-      printf("    D:%c TakePC:%c TARG:0x%x PC:0x%x\n",
-             PrintUtil.ConvertChar(csr.io.status.debug, 'D'),
-             PrintUtil.ConvertChar(br_unit_resp.take_pc, 'T'),
-             br_unit_resp.target,
-             br_unit_resp.pc)
-
-
-
-   }
-
    if (DEBUG_PRINTF)
    {
       println("\n Chisel Printout Enabled\n")
@@ -1245,107 +1219,150 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
 
       println("Whitespace padded: " + whitespace)
 
-      printf("--- Cycle=%d --- Retired Instrs=%d ----------------------------------------------\n",
+      printf("--- Cyc=%d , ----------------- Ret: %d ----------------------------------",
              debug_tsc_reg,
              debug_irt_reg & (0xffffff).U)
 
-      printf("Decode:\n")
       for (w <- 0 until decodeWidth)
       {
-         printf("    Slot:%d (PC:0x%x Valids:%c%c Inst:DASM(%x))\n",
-           w.U,
-           dec_uops(w).pc(19,0),
-           PrintUtil.ConvertChar(io.ifu.fetchpacket.valid && dec_fbundle.uops(w).valid && !dec_finished_mask(w), 'V'),
-           PrintUtil.ConvertChar(dec_will_fire(w), 'V'),
-           dec_fbundle.uops(w).inst)
+         if (w == 0)
+         {
+            printf("\n  Dec:  ([0x%x]                        ", dec_uops(w).pc(19,0))
+         }
+         else
+         {
+            printf("[0x%x]                        ", dec_uops(w).pc(19,0))
+         }
       }
 
-      printf("Rename:\n")
       for (w <- 0 until decodeWidth)
       {
-         printf("    Slot:%d (PC:0x%x Valid:%c Inst:DASM(%x))\n",
-           w.U,
-           rename_stage.io.ren2_uops(w).pc(19,0),
-           PrintUtil.ConvertChar(rename_stage.io.ren2_mask(w), 'V'),
-           rename_stage.io.ren2_uops(w).inst)
+         printf("(%c%c) " + "DASM(%x)" + " |  ",
+                Mux(io.ifu.fetchpacket.valid && dec_fbundle.uops(w).valid && !dec_finished_mask(w), Str("v"), Str("-")),
+                Mux(dec_will_fire(w), Str("V"), Str("-")),
+                dec_fbundle.uops(w).inst
+                )
       }
 
-      printf("Decode Finished:0x%x\n", dec_finished_mask)
-
-      printf("Dispatch:\n")
-      for (w <- 0 until DISPATCH_WIDTH)
+      for (w <- 0 until decodeWidth)
       {
-         printf("    Slot:%d (ISAREG: DST:%d SRCS:%d,%d,%d) (PREG: (#,Bsy,Typ) %d[-](%c) %d[%c](%c) %d[%c](%c) %d[%c](%c))\n",
-                w.U,
+         if (w == 0)
+         {
+            printf("\n  Ren:  ([0x%x]                        ", rename_stage.io.ren2_uops(w).pc(19,0))
+         }
+         else
+         {
+            printf("[0x%x]                        ", rename_stage.io.ren2_uops(w).pc(19,0))
+         }
+      }
+
+      for (w <- 0 until decodeWidth)
+      {
+         printf(" (%c) " + "DASM(%x)" + " |  ",
+                Mux(rename_stage.io.ren2_mask(w), Str("V"), Str("-")),
+                rename_stage.io.ren2_uops(w).inst
+                )
+      }
+
+      printf(") fin(%x)\n", dec_finished_mask)
+      for (w <- 0 until decodeWidth)
+      {
+         printf("        [ISA:%d,%d,%d,%d] [Phs:%d(%c)%d[%c](%c)%d[%c](%c)%d[%c](%c)] ",
                 dis_uops(w).ldst,
                 dis_uops(w).lrs1,
                 dis_uops(w).lrs2,
                 dis_uops(w).lrs3,
                 dis_uops(w).pdst,
                 Mux(dis_uops(w).dst_rtype   === RT_FIX, Str("X"),
-                    Mux(dis_uops(w).dst_rtype === RT_X  , Str("-"),
-                        Mux(dis_uops(w).dst_rtype === RT_FLT, Str("f"),
-                            Mux(dis_uops(w).dst_rtype === RT_PAS, Str("C"), Str("?"))))),
+                  Mux(dis_uops(w).dst_rtype === RT_X  , Str("-"),
+                  Mux(dis_uops(w).dst_rtype === RT_FLT, Str("f"),
+                  Mux(dis_uops(w).dst_rtype === RT_PAS, Str("C"), Str("?"))))),
                 dis_uops(w).pop1,
-                PrintUtil.ConvertChar(rename_stage.io.ren2_uops(w).prs1_busy, 'B', 'R'),
+                Mux(rename_stage.io.ren2_uops(w).prs1_busy, Str("B"), Str("R")),
                 Mux(dis_uops(w).lrs1_rtype    === RT_FIX, Str("X"),
-                    Mux(dis_uops(w).lrs1_rtype === RT_X  , Str("-"),
-                        Mux(dis_uops(w).lrs1_rtype === RT_FLT, Str("f"),
-                            Mux(dis_uops(w).lrs1_rtype === RT_PAS, Str("C"), Str("?"))))),
+                   Mux(dis_uops(w).lrs1_rtype === RT_X  , Str("-"),
+                   Mux(dis_uops(w).lrs1_rtype === RT_FLT, Str("f"),
+                   Mux(dis_uops(w).lrs1_rtype === RT_PAS, Str("C"), Str("?"))))),
                 dis_uops(w).pop2,
-                PrintUtil.ConvertChar(rename_stage.io.ren2_uops(w).prs2_busy, 'B', 'R'),
+                Mux(rename_stage.io.ren2_uops(w).prs2_busy, Str("B"), Str("R")),
                 Mux(dis_uops(w).lrs2_rtype    === RT_FIX, Str("X"),
-                    Mux(dis_uops(w).lrs2_rtype === RT_X  , Str("-"),
-                        Mux(dis_uops(w).lrs2_rtype === RT_FLT, Str("f"),
-                            Mux(dis_uops(w).lrs2_rtype === RT_PAS, Str("C"), Str("?"))))),
+                   Mux(dis_uops(w).lrs2_rtype === RT_X  , Str("-"),
+                   Mux(dis_uops(w).lrs2_rtype === RT_FLT, Str("f"),
+                   Mux(dis_uops(w).lrs2_rtype === RT_PAS, Str("C"), Str("?"))))),
                 dis_uops(w).pop3,
-                PrintUtil.ConvertChar(rename_stage.io.ren2_uops(w).prs3_busy, 'B', 'R'),
-                PrintUtil.ConvertChar(dis_uops(w).frs3_en, 'f', '-'))
+                Mux(rename_stage.io.ren2_uops(w).prs3_busy, Str("B"), Str("R")),
+                Mux(dis_uops(w).frs3_en, Str("f"), Str("-"))
+                )
       }
 
       if (DEBUG_PRINTF_ROB)
       {
-         val robTypeStrs = PrintUtil.RobTypeChars(rob.io.debug.state)
-         printf("ROB:\n")
-         printf("    (State:%c%c%c Rdy:%c LAQFull:%c STQFull:%c Flush:%c BMskFull:%c DShimRdy:%c) BMsk:0x%x Mode:%c\n",
-                robTypeStrs(0),
-                robTypeStrs(1),
-                robTypeStrs(2),
-                PrintUtil.ConvertChar(                rob.io.ready, '_', '!'),
-                PrintUtil.ConvertChar(             lsu.io.laq_full, 'L'),
-                PrintUtil.ConvertChar(             lsu.io.stq_full, 'S'),
-                PrintUtil.ConvertChar(          rob.io.flush.valid, 'F'),
-                PrintUtil.ConvertChar(branch_mask_full.reduce(_|_), 'B'),
-                PrintUtil.ConvertChar(   dc_shim.io.core.req.ready, 'R', 'B'),
+         printf("\n) ctate: (%c: %c %c %c %c %c %c) BMsk:%x Mode:%c\n",
+                Mux(rob.io.debug.state === 0.U, Str("R"),
+                Mux(rob.io.debug.state === 1.U, Str("N"),
+                Mux(rob.io.debug.state === 2.U, Str("B"),
+                Mux(rob.io.debug.state === 3.U, Str("W"),
+                                                    Str(" "))))),
+                Mux(rob.io.ready,Str("_"), Str("!")),
+                Mux(lsu.io.laq_full, Str("L"), Str("_")),
+                Mux(lsu.io.stq_full, Str("S"), Str("_")),
+                Mux(rob.io.flush.valid, Str("F"), Str(" ")),
+                Mux(branch_mask_full.reduce(_|_), Str("B"), Str(" ")),
+                Mux(dc_shim.io.core.req.ready, Str("R"), Str("B")),
                 dec_brmask_logic.io.debug.branch_mask,
-                Mux(csr.io.status.prv === (PRV.M).U, Str("M"),
-                    Mux(csr.io.status.prv === (PRV.U).U, Str("U"),
-                        Mux(csr.io.status.prv === (PRV.S).U, Str("S"), Str("?")))))
+                Mux(csr.io.status.prv === (0x3).U, Str("M"),
+                Mux(csr.io.status.prv === (0x0).U, Str("U"),
+                Mux(csr.io.status.prv === (0x1).U, Str("S"),  //2 is H
+                                                      Str("?"))))
+                )
       }
 
-      printf("Other:\n")
-      printf("    Expt:(V:%c Cause:%d) Commit:%x IFreeLst:0x%x TotFree:%d IPregLst:0x%x TotPreg:%d\n",
-             PrintUtil.ConvertChar(rob.io.com_xcpt.valid, 'E'),
+      printf("Exct(%c%d) Commit(%x) fl: 0x%x (%d) is: 0x%x (%d)\n",
+             Mux(rob.io.com_xcpt.valid, Str("E"), Str("-")),
              rob.io.com_xcpt.bits.cause,
              rob.io.commit.valids.asUInt,
              rename_stage.io.debug.ifreelist,
              PopCount(rename_stage.io.debug.ifreelist),
              rename_stage.io.debug.iisprlist,
-             PopCount(rename_stage.io.debug.iisprlist))
-      printf("    FFreeList:0x%x TotFree:%d FPrefLst:0x%x TotPreg:%d\n",
+             PopCount(rename_stage.io.debug.iisprlist)
+             )
+
+      printf("                                      fl: 0x%x (%d) is: 0x%x (%d)\n",
              rename_stage.io.debug.ffreelist,
              PopCount(rename_stage.io.debug.ffreelist),
              rename_stage.io.debug.fisprlist,
-             PopCount(rename_stage.io.debug.fisprlist))
+             PopCount(rename_stage.io.debug.fisprlist)
+             )
 
       // branch unit
-      printf("Branch Unit:\n")
-      printf("    V:%c Mispred:%c T/NT:%c NPC:(V:%c PC:0x%x)\n",
-             PrintUtil.ConvertChar(br_unit_resp.brinfo.valid, 'V'),
-             PrintUtil.ConvertChar(br_unit_resp.brinfo.mispredict, 'M'),
-             PrintUtil.ConvertChar(br_unit_resp.brinfo.taken, 'T', 'N'),
-             PrintUtil.ConvertChar(exe_units(brunit_idx).io.get_ftq_pc.next_pc.valid, 'V'),
-             exe_units(brunit_idx).io.get_ftq_pc.next_pc.bits(19,0))
+      printf("                          Branch Unit: %c,%c,%d  NPC=%d,0x%x\n",
+             Mux(br_unit.brinfo.valid,Str("V"), Str(" ")),
+             Mux(br_unit.brinfo.mispredict, Str("M"), Str(" ")),
+             br_unit.brinfo.taken,
+             exe_units(brunit_idx).io.get_ftq_pc.next_val,
+             exe_units(brunit_idx).io.get_ftq_pc.next_pc(19,0)
+             )
+
+      // Rename Map Tables / ISA Register File
+      val xpr_to_string =
+              VecInit(Str(" x0"), Str(" ra"), Str(" sp"), Str(" gp"),
+                   Str(" tp"), Str(" t0"), Str(" t1"), Str(" t2"),
+                   Str(" s0"), Str(" s1"), Str(" a0"), Str(" a1"),
+                   Str(" a2"), Str(" a3"), Str(" a4"), Str(" a5"),
+                   Str(" a6"), Str(" a7"), Str(" s2"), Str(" s3"),
+                   Str(" s4"), Str(" s5"), Str(" s6"), Str(" s7"),
+                   Str(" s8"), Str(" s9"), Str("s10"), Str("s11"),
+                   Str(" t3"), Str(" t4"), Str(" t5"), Str(" t6"))
+
+      val fpr_to_string =
+              VecInit( Str("ft0"), Str("ft1"), Str("ft2"), Str("ft3"),
+                   Str("ft4"), Str("ft5"), Str("ft6"), Str("ft7"),
+                   Str("fs0"), Str("fs1"), Str("fa0"), Str("fa1"),
+                   Str("fa2"), Str("fa3"), Str("fa4"), Str("fa5"),
+                   Str("fa6"), Str("fa7"), Str("fs2"), Str("fs3"),
+                   Str("fs4"), Str("fs5"), Str("fs6"), Str("fs7"),
+                   Str("fs8"), Str("fs9"), Str("fs10"), Str("fs11"),
+                   Str("ft8"), Str("ft9"), Str("ft10"), Str("ft11"))
 
       for (x <- 0 until whitespace)
       {
@@ -1371,28 +1388,30 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
                printf("(0x%x)", uop.inst)
             }
          }
-
          when (rob.io.commit.valids(w))
          {
-            printf("%d 0x%x ",
-                   priv,
-                   Sext(rob.io.commit.uops(w).pc(vaddrBits-1,0), xLen))
-            printf_inst(rob.io.commit.uops(w))
             when (rob.io.commit.uops(w).dst_rtype === RT_FIX && rob.io.commit.uops(w).ldst =/= 0.U)
             {
+               printf("%d 0x%x ",
+                  priv, Sext(rob.io.commit.uops(w).pc(vaddrBits-1,0), xLen))
+               printf_inst(rob.io.commit.uops(w))
                printf(" x%d 0x%x\n",
-                      rob.io.commit.uops(w).ldst,
-                      rob.io.commit.uops(w).debug_wdata)
+                  rob.io.commit.uops(w).ldst, rob.io.commit.uops(w).debug_wdata)
 
             }
             .elsewhen (rob.io.commit.uops(w).dst_rtype === RT_FLT)
             {
+               printf("%d 0x%x ",
+                  priv, Sext(rob.io.commit.uops(w).pc(vaddrBits-1,0), xLen))
+               printf_inst(rob.io.commit.uops(w))
                printf(" f%d 0x%x\n",
-                      rob.io.commit.uops(w).ldst,
-                      rob.io.commit.uops(w).debug_wdata)
+                  rob.io.commit.uops(w).ldst, rob.io.commit.uops(w).debug_wdata)
             }
             .otherwise
             {
+               printf("%d 0x%x ",
+                  priv, Sext(rob.io.commit.uops(w).pc(vaddrBits-1,0), xLen))
+               printf_inst(rob.io.commit.uops(w))
                printf("\n")
             }
          }

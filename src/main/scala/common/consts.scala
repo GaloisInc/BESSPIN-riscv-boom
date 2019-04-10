@@ -30,7 +30,6 @@ trait BOOMDebugConstants
    val COMMIT_LOG_PRINTF   = false // dump commit state, for comparision against ISA sim
    val O3PIPEVIEW_PRINTF   = false // dump trace for O3PipeView from gem5
    val O3_CYCLE_TIME       = (1000)// "cycle" time expected by o3pipeview.py
-   val BPU_PRINTF          = true  // debug printf's for just the bpu
 
    // When enabling DEBUG_PRINTF, the vertical whitespace can be padded out
    // such that viewing the *.out file in vim can line up veritically to
@@ -39,11 +38,10 @@ trait BOOMDebugConstants
    val debugScreenheight  = 79
 
    // turn off stuff to dramatically reduce Chisel node count
-   val DEBUG_PRINTF_LSU    = false && DEBUG_PRINTF
+   val DEBUG_PRINTF_LSU    = true && DEBUG_PRINTF
    val DEBUG_PRINTF_ROB    = true && DEBUG_PRINTF
-   val DEBUG_PRINTF_TAGE   = false && DEBUG_PRINTF
+   val DEBUG_PRINTF_TAGE   = true && DEBUG_PRINTF
    val DEBUG_PRINTF_FTQ    = true && DEBUG_PRINTF
-   val DEBUG_PRINTF_IQ     = false && DEBUG_PRINTF
 
    if (O3PIPEVIEW_PRINTF) require (!DEBUG_PRINTF && !COMMIT_LOG_PRINTF)
 }
@@ -352,7 +350,6 @@ trait RISCVConstants
    def ExpandRVC(inst: UInt)(implicit p: Parameters): UInt =
    {
       val rvc_exp = Module(new RVCExpander)
-      rvc_exp.suggestName("rvc_exp_helper")
       rvc_exp.io.in := inst
       Mux(rvc_exp.io.rvc, rvc_exp.io.out.bits, inst)
    }
@@ -374,11 +371,10 @@ trait RISCVConstants
    // Note: Accepts only EXPANDED rvc instructions
    def GetCfiType(inst: UInt)(implicit p: Parameters): UInt =
    {
-      val br_decode = Module(new boom.exu.BranchDecode)
-      br_decode.suggestName("br_decode_helper")
-      br_decode.io.inst := inst
-      br_decode.io.pc := 0.U
-      br_decode.io.cfi_type
+      val bdecode = Module(new boom.exu.BranchDecode)
+      bdecode.io.inst := inst
+      bdecode.io.pc := 0.U
+      bdecode.io.cfi_type
    }
 }
 
