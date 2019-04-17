@@ -18,8 +18,8 @@
 //   if3 - Instruction Fetch 3 (enqueue to fetch buffer)
 //   if4 - Instruction Fetch 4 (redirect from bpd)
 //   dec - Decode
-//   ren - Rename
-//   dis - Dispatch
+//   ren - Rename1
+//   dis - Rename2/Dispatch
 //   iss - Issue
 //   rrd - Register Read
 //   exe - Execute
@@ -104,6 +104,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    val decode_units     = for (w <- 0 until coreWidth) yield { val d = Module(new DecodeUnit); d }
    val dec_brmask_logic = Module(new BranchMaskGenerationLogic(coreWidth))
    val rename_stage     = Module(new RenameStage(coreWidth, num_int_wakeup_ports, num_fp_wakeup_ports))
+
    val issue_units      = new boom.exu.IssueUnits(num_int_wakeup_ports)
    val iregfile         = if (enableCustomRf)
                           {
@@ -155,8 +156,8 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    val dec_rdy        = Wire(Bool())
 
    // Dispatch Stage
-   val dis_valids     = Wire(Vec(dispatchWidth, Bool())) // true if uop WILL enter IW
-   val dis_uops       = Wire(Vec(dispatchWidth, new MicroOp()))
+   val dis_valids     = Wire(Vec(coreWidth, Bool())) // true if uop WILL enter IW
+   val dis_uops       = Wire(Vec(coreWidth, new MicroOp()))
 
    // Issue Stage/Register Read
    val iss_valids     = Wire(Vec(exe_units.num_irf_readers, Bool()))
@@ -735,7 +736,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
    // Input (Dispatch)
    for {
       iu <- issue_units
-      w <- 0 until dispatchWidth
+      w <- 0 until coreWidth
    }{
       iu.io.dis_valids(w) := dis_valids(w) && dis_uops(w).iqtype === (iu.iqType).U
       iu.io.dis_uops(w) := dis_uops(w)
