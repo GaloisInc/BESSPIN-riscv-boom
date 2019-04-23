@@ -125,6 +125,7 @@ class CommitSignals(implicit p: Parameters) extends BoomBundle
 
   // Perform rollback of rename state (in conjuction with commit.uops).
   val rbk_valids = Vec(retireWidth, Bool())
+  val rollback   = Bool()
 
   // tell the LSU how many stores and loads are being committed
   val st_mask    = Vec(retireWidth, Bool())
@@ -402,9 +403,6 @@ class Rob(
     //-----------------------------------------------
     // Commit or Rollback
 
-    // Don't attempt to rollback the tail's row when the rob is full.
-    val rbk_row = rob_state === s_rollback && !full
-
     // Can this instruction commit? (the check for exceptions/rob_state happens later).
     can_commit(w) := rob_val(rob_head) && !(rob_bsy(rob_head)) && !io.csr_stall
 
@@ -416,25 +414,24 @@ class Rob(
 
     // use the same "com_uop" for both rollback AND commit
     // Perform Commit
-    io.commit.valids(w)     := will_commit(w)
-    io.commit.uops(w)       := rob_uop(com_idx)
+    io.commit.valids(w) := will_commit(w)
+    io.commit.uops(w)   := rob_uop(com_idx)
 
-    io.commit.rbk_valids(w) :=
-                            rbk_row &&
-                            rob_val(com_idx) &&
-                            (rob_uop(com_idx).dst_rtype === RT_FIX || rob_uop(com_idx).dst_rtype === RT_FLT) &&
-                            (!(enableCommitMapTable.B))
+    // Don't attempt to rollback the tail's row when the rob is full.
+    val rbk_row = rob_state === s_rollback && !full
+
+    io.commit.rbk_valids(w) := rbk_row && rob_val(com_idx) && (!(ENABLE_COMMIT_MAP_TABLE.B))
 
     when (rbk_row) {
       rob_val(com_idx)       := false.B
       rob_exception(com_idx) := false.B
     }
 
-    if (enableCommitMapTable) {
+    if (ENABLE_COMMIT_MAP_TABLE) {
       when (RegNext(exception_thrown)) {
         for (i <- 0 until numRobRows) {
-          rob_val(i)      := false.B
-          rob_bsy(i)      := false.B
+          rob_val(i) := false.B
+          rob_bsy(i) := false.B
           rob_uop(i).debug_inst := BUBBLE
         }
       }
@@ -693,14 +690,14 @@ class Rob(
   val finished_committing_row =
     (io.commit.valids.asUInt =/= 0.U) &&
     ((will_commit.asUInt ^ rob_head_vals.asUInt) === 0.U) &&
-    !(r_partial_row && rob_head === rob_tail && !maybe_full)
+    !(r_partial_row && rob_head === rob_tail)
 
   when (finished_committing_row) {
     rob_head     := WrapInc(rob_head, numRobRows)
     rob_head_lsb := 0.U
     rob_deq      := true.B
   } .elsewhen (io.commit.valids.asUInt =/= 0.U) {
-    rob_head_lsb := PriorityEncoder(~MaskLower(io.commit.valids.asUInt))
+    rob_head_lsb := PriorityEncoder(~io.commit.valids.asUInt)
   } .elsewhen (empty && io.enq_valids.asUInt =/= 0.U) {
     rob_head_lsb := PriorityEncoder(io.enq_valids)
   }
@@ -764,9 +761,9 @@ class Rob(
     rob_tail     := WrapDec(rob_tail, numRobRows)
     rob_tail_lsb := (coreWidth-1).U
     rob_deq := true.B
-  } .elsewhen (rob_state === s_rollback && (rob_tail === rob_head) && !maybe_full) {
+  } .elsewhen (rob_state === s_rollback && (rob_tail === rob_head) && rob_tail_lsb =/= rob_head_lsb) {
     // Rollback an entry
-    rob_tail_lsb := rob_head_lsb
+    rob_tail_lsb := rob_tail_lsb - 1.U
   } .elsewhen (io.brinfo.mispredict) {
     rob_tail     := WrapInc(GetRowIdx(io.brinfo.rob_idx), numRobRows)
     rob_tail_lsb := 0.U
@@ -775,11 +772,11 @@ class Rob(
     rob_tail_lsb := 0.U
     rob_enq      := true.B
   } .elsewhen (io.enq_valids.asUInt =/= 0.U && io.enq_partial_stall) {
-    rob_tail_lsb := PriorityEncoder(~MaskLower(io.enq_valids.asUInt))
+    rob_tail_lsb := coreWidth.U - PriorityEncoder(Reverse(io.enq_valids.asUInt))
   }
 
 
-  if (enableCommitMapTable) {
+  if (ENABLE_COMMIT_MAP_TABLE) {
     when (RegNext(exception_thrown)) {
       rob_tail     := 0.U
       rob_tail_lsb := 0.U
@@ -795,7 +792,7 @@ class Rob(
   // I.E. at least one entry will be empty when in a steady state of dispatching and committing a row each cycle.
   // TODO should we add an extra 'parity bit' onto the ROB pointers to simplify this logic?
 
-  maybe_full := !rob_deq && (rob_enq || maybe_full) || io.brinfo.mispredict
+  maybe_full := !rob_deq && (rob_enq || maybe_full)
   full       := rob_tail === rob_head && maybe_full
   empty      := (rob_head === rob_tail) && (rob_head_vals.asUInt === 0.U)
 
@@ -810,7 +807,7 @@ class Rob(
   //-----------------------------------------------
 
   // ROB FSM
-  if (!enableCommitMapTable) {
+  if (!ENABLE_COMMIT_MAP_TABLE) {
     switch (rob_state) {
       is (s_reset) {
         rob_state := s_normal
@@ -869,6 +866,8 @@ class Rob(
       }
     }
   }
+
+  io.commit.rollback := rob_state === s_rollback
 
   // -----------------------------------------------
   // Outputs
@@ -990,12 +989,12 @@ class Rob(
     // scalastyle:off
   }
 
-  override def toString: String = BoomCoreStringPrefix(
-    "==ROB==",
-    "Machine Width      : " + coreWidth,
-    "Rob Entries        : " + numRobEntries,
-    "Rob Rows           : " + numRobRows,
-    "Rob Row size       : " + log2Ceil(numRobRows),
-    "log2Ceil(coreWidth): " + log2Ceil(coreWidth),
-    "FPU FFlag Ports    : " + numFpuPorts)
+  override def toString: String =
+    "\n   [Core " + hartId + "] ==ROB==" +
+    "\n   [Core " + hartId + "] Machine Width      : " + coreWidth +
+    "\n   [Core " + hartId + "] Rob Entries        : " + numRobEntries +
+    "\n   [Core " + hartId + "] Rob Rows           : " + numRobRows +
+    "\n   [Core " + hartId + "] Rob Row size       : " + log2Ceil(numRobRows) +
+    "\n   [Core " + hartId + "] log2Ceil(coreWidth): " + log2Ceil(coreWidth) +
+    "\n   [Core " + hartId + "] FPU FFlag Ports    : " + numFpuPorts
 }
