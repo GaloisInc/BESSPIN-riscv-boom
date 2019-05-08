@@ -749,7 +749,7 @@ class Rob(
   }
 
   // Head overrunning PNR likely means an entry hasn't been marked as safe when it should have been.
-  assert(!IsOlder(rob_pnr_idx, rob_head_idx, rob_tail_idx) || rob_pnr_idx === rob_tail_idx)
+  assert(!IsOlder(rob_pnr_idx, rob_head_idx, rob_head_idx) || rob_pnr_idx === rob_tail_idx)
 
   // PNR overrunning tail likely means an entry has been marked as safe when it shouldn't have been.
   assert(!IsOlder(rob_tail_idx, rob_pnr_idx, rob_head_idx) || full)
@@ -799,6 +799,7 @@ class Rob(
   full       := rob_tail === rob_head && maybe_full
   empty      := (rob_head === rob_tail) && (rob_head_vals.asUInt === 0.U)
 
+  io.rob_head_idx := rob_head_idx
   io.rob_tail_idx := rob_tail_idx
   io.rob_pnr_idx  := rob_pnr_idx
   io.empty        := empty
