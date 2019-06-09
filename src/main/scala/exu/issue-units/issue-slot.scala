@@ -177,17 +177,17 @@ class IssueSlot(val numWakeupPorts: Int)(implicit p: Parameters)
 
   for (i <- 0 until numWakeupPorts) {
     when (io.wakeup_ports(i).valid &&
-         (io.wakeup_ports(i).bits.pdst === slotUop.pop1) &&
+         (io.wakeup_ports(i).bits.pdst === slotUop.prs1) &&
          !(io.ldspec_miss && io.wakeup_ports(i).bits.poisoned)) {
       updated_p1 := true.B
     }
     when (io.wakeup_ports(i).valid &&
-         (io.wakeup_ports(i).bits.pdst === slotUop.pop2) &&
+         (io.wakeup_ports(i).bits.pdst === slotUop.prs2) &&
          !(io.ldspec_miss && io.wakeup_ports(i).bits.poisoned)) {
       updated_p2 := true.B
     }
     when (io.wakeup_ports(i).valid &&
-         (io.wakeup_ports(i).bits.pdst === slotUop.pop3)) {
+         (io.wakeup_ports(i).bits.pdst === slotUop.prs3)) {
       updated_p3 := true.B
     }
   }
@@ -196,23 +196,23 @@ class IssueSlot(val numWakeupPorts: Int)(implicit p: Parameters)
     "Loads to x0 should never speculatively wakeup other instructions")
 
   // TODO disable if FP IQ.
-  when (io.ldspec_dst.valid && io.ldspec_dst.bits === slotUop.pop1 && slotUop.lrs1_rtype === RT_FIX) {
+  when (io.ldspec_dst.valid && io.ldspec_dst.bits === slotUop.prs1 && slotUop.lrs1_rtype === RT_FIX) {
     updated_p1 := true.B
     updated_p1_poisoned := true.B
     assert (!slot_p1_poisoned)
   }
-  when (io.ldspec_dst.valid && io.ldspec_dst.bits === slotUop.pop2 && slotUop.lrs2_rtype === RT_FIX) {
+  when (io.ldspec_dst.valid && io.ldspec_dst.bits === slotUop.prs2 && slotUop.lrs2_rtype === RT_FIX) {
     updated_p2 := true.B
     updated_p2_poisoned := true.B
     assert (!slot_p2_poisoned)
   }
 
   when (io.ldspec_miss && slot_p1_poisoned) {
-    assert(slotUop.pop1 =/= 0.U, "Poison bit can't be set for pop1=x0!")
+    assert(slotUop.prs1 =/= 0.U, "Poison bit can't be set for prs1=x0!")
     updated_p1 := false.B
   }
   when (io.ldspec_miss && slot_p2_poisoned) {
-    assert(slotUop.pop2 =/= 0.U, "Poison bit can't be set for pop2=x0!")
+    assert(slotUop.prs2 =/= 0.U, "Poison bit can't be set for prs2=x0!")
     updated_p2 := false.B
   }
 
