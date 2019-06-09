@@ -41,18 +41,18 @@ import boom.lsu._
  * @param boundaryBuffers ...
  */
 case class BoomTileParams(
-    core: BoomCoreParams = BoomCoreParams(),
-    icache: Option[ICacheParams] = Some(ICacheParams()),
-    dcache: Option[DCacheParams] = Some(DCacheParams()),
-    btb: Option[BTBParams] = Some(BTBParams()),
-    dataScratchpadBytes: Int = 0,
-    trace: Boolean = false,
-    name: Option[String] = Some("tile"),
-    hartId: Int = 0,
-    beuAddr: Option[BigInt] = None,
-    blockerCtrlAddr: Option[BigInt] = None,
-    boundaryBuffers: Boolean = false // if synthesized with hierarchical PnR, cut feed-throughs?
-    ) extends TileParams
+  core: BoomCoreParams = BoomCoreParams(),
+  icache: Option[ICacheParams] = Some(ICacheParams()),
+  dcache: Option[DCacheParams] = Some(DCacheParams()),
+  btb: Option[BTBParams] = Some(BTBParams()),
+  dataScratchpadBytes: Int = 0,
+  trace: Boolean = false,
+  name: Option[String] = Some("tile"),
+  hartId: Int = 0,
+  beuAddr: Option[BigInt] = None,
+  blockerCtrlAddr: Option[BigInt] = None,
+  boundaryBuffers: Boolean = false // if synthesized with hierarchical PnR, cut feed-throughs?
+  ) extends TileParams
 {
   require(icache.isDefined)
   require(dcache.isDefined)
@@ -65,22 +65,22 @@ case class BoomTileParams(
  * @param crossing ...
  */
 class BoomTile(
-    val boomParams: BoomTileParams,
-    crossing: ClockCrossingType,
-    lookup: LookupByHartIdImpl,
-    q: Parameters)
-    extends BaseTile(boomParams, crossing, lookup, q)
-    with SinksExternalInterrupts
-    with SourcesExternalNotifications
-    with HasBoomLazyRoCC  // implies CanHaveSharedFPU with CanHavePTW with HasHellaCache
-    with CanHaveBoomPTW
-    with HasBoomHellaCache
-    with HasBoomICacheFrontend
+  val boomParams: BoomTileParams,
+  crossing: ClockCrossingType,
+  lookup: LookupByHartIdImpl,
+  q: Parameters)
+  extends BaseTile(boomParams, crossing, lookup, q)
+  with SinksExternalInterrupts
+  with SourcesExternalNotifications
+  with HasBoomLazyRoCC  // implies CanHaveSharedFPU with CanHavePTW with HasHellaCache
+  with CanHaveBoomPTW
+  with HasBoomHellaCache
+  with HasBoomICacheFrontend
 {
 
   // Private constructor ensures altered LazyModule.p is used implicitly
-  def this(params: BoomTileParams, crossing: RocketCrossingParams, lookup: LookupByHartIdImpl)(implicit p: Parameters) =
-    this(params, crossing.crossingType, lookup, p)
+  def this(params: BoomTileParams, crossing: RocketCrossingParams, lookup: LookupByHartIdImpl)
+    (implicit p: Parameters) = this(params, crossing.crossingType, lookup, p)
 
 
   val intOutwardNode = IntIdentityNode()
@@ -188,10 +188,10 @@ class BoomTile(
  * @param outer top level BOOM tile
  */
 class BoomTileModuleImp(outer: BoomTile) extends BaseTileModuleImp(outer)
-    with HasBoomLazyRoCCModule
-    with CanHaveBoomPTWModule
-    with HasBoomHellaCacheModule
-    with HasBoomICacheFrontendModule
+  with HasBoomLazyRoCCModule
+  with CanHaveBoomPTWModule
+  with HasBoomHellaCacheModule
+  with HasBoomICacheFrontendModule
 {
   Annotated.params(this, outer.boomParams)
 
@@ -240,13 +240,12 @@ class BoomTileModuleImp(outer: BoomTile) extends BaseTileModuleImp(outer)
   core.io.reset_vector := DontCare
 
 
-  if (outer.roccs.size > 0)
-  {
-     cmdRouter.get.io.in <> core.io.rocc.cmd
-     outer.roccs.foreach(_.module.io.exception := core.io.rocc.exception)
-     core.io.rocc.resp <> respArb.get.io.out
-     core.io.rocc.busy <> (cmdRouter.get.io.busy || outer.roccs.map(_.module.io.busy).reduce(_||_))
-     core.io.rocc.interrupt := outer.roccs.map(_.module.io.interrupt).reduce(_||_)
+  if (outer.roccs.size > 0) {
+    cmdRouter.get.io.in <> core.io.rocc.cmd
+    outer.roccs.foreach(_.module.io.exception := core.io.rocc.exception)
+    core.io.rocc.resp <> respArb.get.io.out
+    core.io.rocc.busy <> (cmdRouter.get.io.busy || outer.roccs.map(_.module.io.busy).reduce(_||_))
+    core.io.rocc.interrupt := outer.roccs.map(_.module.io.interrupt).reduce(_||_)
   }
 
 
