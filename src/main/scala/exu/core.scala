@@ -383,10 +383,10 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
     + "\n   [Core " + hartId + "] Issue Width           : " + issueParams.map(_.issueWidth).sum
     + "\n   [Core " + hartId + "] ROB Size              : " + numRobEntries
     + "\n   [Core " + hartId + "] Issue Window Size     : " + issueParams.map(_.numEntries) + issStr
-    + "\n   [Core " + hartId + "] Load/Store Unit Size  : " + NUM_LDQ_ENTRIES + "/" + NUM_STQ_ENTRIES
+    + "\n   [Core " + hartId + "] Load/Store Unit Size  : " + numLdqEntries + "/" + numStqEntries
     + "\n   [Core " + hartId + "] Num Int Phys Registers: " + numIntPhysRegs
     + "\n   [Core " + hartId + "] Num FP  Phys Registers: " + numFpPhysRegs
-    + "\n   [Core " + hartId + "] Max Branch Count      : " + MAX_BR_COUNT
+    + "\n   [Core " + hartId + "] Max Branch Count      : " + maxBrCount
     + "\n   [Core " + hartId + "] BTB Size              : "
     + (if (enableBTB) ("" + boomParams.btb.nSets * boomParams.btb.nWays + " entries (" +
          boomParams.btb.nSets + " x " + boomParams.btb.nWays + " ways)") else 0)
@@ -978,7 +978,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
 
   var w_cnt = 1
   // 0th goes to ll_wbarb
-  iregfile.io.write_ports(0) := WritePort(ll_wbarb.io.out, IPREG_SZ, xLen)
+  iregfile.io.write_ports(0) := WritePort(ll_wbarb.io.out, ipregSz, xLen)
   for (i <- 0 until exe_units.length) {
     if (exe_units(i).writesIrf) {
       val wbresp = exe_units(i).io.iresp
@@ -1171,7 +1171,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
 
     val numFtqWhitespace = if (DEBUG_PRINTF_FTQ) (ftqSz/4)+1 else 0
     val fetchWhitespace = if (fetchWidth >= 8) 2 else 0
-    var whitespace = (debugScreenheight - 25 + 3 -10 + 3 + 4 - coreWidth - (NUM_LDQ_ENTRIES max NUM_STQ_ENTRIES) -
+    var whitespace = (debugScreenheight - 25 + 3 -10 + 3 + 4 - coreWidth - (numLdqEntries max numStqEntries) -
       issueParams.map(_.numEntries).sum - issueParams.length - (numRobEntries/coreWidth) -
       numFtqWhitespace - fetchWhitespace)
 
