@@ -770,6 +770,7 @@ class Rob(
   } .elsewhen (io.brinfo.mispredict) {
     rob_tail     := WrapInc(GetRowIdx(io.brinfo.rob_idx), numRobRows)
     rob_tail_lsb := 0.U
+    maybe_full := true.B
   } .elsewhen (io.enq_valids.asUInt =/= 0.U && !io.enq_partial_stall) {
     rob_tail     := WrapInc(rob_tail, numRobRows)
     rob_tail_lsb := 0.U
