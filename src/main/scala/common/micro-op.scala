@@ -35,6 +35,7 @@ abstract trait HasBoomUOP extends BoomBundle
 class MicroOp(implicit p: Parameters) extends BoomBundle
   with freechips.rocketchip.rocket.constants.MemoryOpConstants
   with freechips.rocketchip.rocket.constants.ScalarOpConstants
+  with boom.ifu.HasL1ICacheBankedParameters
 {
   val uopc             = UInt(UOPC_SZ.W)       // micro-op code
   val debug_inst       = UInt(32.W)
@@ -74,6 +75,8 @@ class MicroOp(implicit p: Parameters) extends BoomBundle
 
   // Index into FTQ to figure out our fetch PC.
   val ftq_idx          = UInt(log2Ceil(ftqSz).W)
+  // Fetch bundle index
+  val fb_idx           = UInt(log2Ceil(fetchWidth).W)  // TODO Get rid of pc_lob and use this instead.
   // This inst straddles two fetch packets
   val edge_inst        = Bool()
   // Low-order bits of our own PC. Combine with ftq[ftq_idx] to get PC.
@@ -143,6 +146,8 @@ class MicroOp(implicit p: Parameters) extends BoomBundle
   def unsafe           = is_load || is_store && !is_fence || is_br_or_jmp && !is_jal
 
   def fu_code_is(_fu: UInt) = (fu_code & _fu) =/= 0.U
+
+  def getPC(fetch_target: UInt) = alignToFetchBoundary(fetch_target) + (fb_idx << coreInstBytes.U)
 }
 
 /**
