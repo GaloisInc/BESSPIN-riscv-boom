@@ -188,8 +188,7 @@ class BrResolutionInfo(implicit p: Parameters) extends BoomBundle
   val taken      = Bool()                     // which direction did the branch go?
   val is_jr      = Bool() // TODO remove use cfi_type instead
   val cfi_type   = CfiType()
-
-  def getCfiIdx = pc_lob >> log2Ceil(coreInstBytes)
+  val cfi_idx    = UInt(log2Ceil(fetchWidth).W)
 
   // for stats
   val btb_made_pred  = Bool()
@@ -524,6 +523,7 @@ class ALUUnit(isBranchUnit: Boolean = false, numStages: Int = 1, dataWidth: Int)
     brinfo.exe_mask       := GetNewBrMask(io.brinfo, uop.br_mask)
     brinfo.tag            := uop.br_tag
     brinfo.ftq_idx        := uop.ftq_idx
+    brinfo.cfi_idx        := uop.fb_idx
     brinfo.pc_lob         := uop.pc_lob
     brinfo.rob_idx        := uop.rob_idx
     brinfo.ldq_idx        := uop.ldq_idx
