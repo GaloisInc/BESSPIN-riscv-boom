@@ -21,6 +21,7 @@ package boom.bpu
 import chisel3._
 import chisel3.util._
 import chisel3.core.withReset
+import chisel3.experimental.dontTouch
 
 import freechips.rocketchip.config.{Parameters, Field}
 
@@ -100,13 +101,14 @@ class GShareBrPredictor(
    )(implicit p: Parameters)
    extends BoomBrPredictor(historyLength)
    with HasGShareParameters
+   with HasL1ICacheBankedParameters
 {
   require (log2Ceil(nSets) == idxSz)
 
   private def Hash (addr: UInt, hist: UInt) = {
     // fold history if too big for our table
     val folded_history = Fold (hist, idxSz, historyLength)
-    ((addr >> (log2Ceil(fetchWidth*coreInstBytes).U)) ^ folded_history)(idxSz-1,0)
+    ((addr >> (log2Ceil(bankBytes).U)) ^ folded_history)(idxSz-1,0)
   }
 
   // for initializing the counter table, this is the value to reset the row to.
@@ -119,10 +121,7 @@ class GShareBrPredictor(
   // Given old counter value, provide the new counter value.
   private def updateCounter(cntr: UInt, taken: Bool): UInt = {
     val next = Wire(UInt(2.W))
-    next :=
-      Mux(taken && cntr =/= 3.U, cntr + 1.U,
-          Mux(!taken && cntr =/= 0.U, cntr - 1.U,
-              cntr))
+    next := Mux(cntr(1) ^ cntr(0), Fill(2, cntr(0)), cntr ^ 1.U)
     next
   }
 
@@ -153,14 +152,7 @@ class GShareBrPredictor(
   // Return the new row.
   private def updateEntireCounterRow (old_row: UInt, was_mispredicted: Bool, cfi_idx: UInt, was_taken: Bool): UInt = {
     val row = Wire(UInt(rowSz.W))
-
-    when (was_mispredicted) {
-      row := updateCounterInRow(old_row, cfi_idx, was_taken)
-    } .otherwise {
-      // strengthen hysteresis bits on correct
-      val h_mask = Fill(fetchWidth, 0x1.asUInt(width=2.W))
-      row := old_row | h_mask
-    }
+    row := updateCounterInRow(old_row, cfi_idx, was_taken)
     row
   }
 
@@ -190,6 +182,7 @@ class GShareBrPredictor(
   // Perform hash in F1.
 
   val s1_ridx = Hash(this.r_f1_fetchpc, this.r_f1_history)
+  dontTouch(s1_ridx)
 
   //------------------------------------------------------------
   // Get prediction in F2 (and store into an ElasticRegister).
@@ -219,15 +212,19 @@ class GShareBrPredictor(
 
   val com_info = (io.commit.bits.info).asTypeOf(new GShareResp(fetchWidth, idxSz))
   val com_idx = Hash(io.commit.bits.fetch_pc, io.commit.bits.history)(idxSz-1,0)
+  dontTouch(com_idx)
 
-  val wen = io.commit.valid || (fsm_state === s_clear)
+  val new_row = updateEntireCounterRow(
+    com_info.rowdata,
+    io.commit.bits.mispredict,
+    io.commit.bits.miss_cfi_idx,
+    io.commit.bits.taken)
+  dontTouch(new_row)
+
+  val wen = (io.commit.valid && io.commit.bits.mispredict) || (fsm_state === s_clear)
+  dontTouch(wen)
+
   when (wen) {
-    val new_row = updateEntireCounterRow(
-      com_info.rowdata,
-      io.commit.bits.mispredict,
-      io.commit.bits.miss_cfi_idx,
-      io.commit.bits.taken)
-
     val waddr = Mux(fsm_state === s_clear, clear_row_addr, com_idx)
     val wdata = Mux(fsm_state === s_clear, initRowValue(), new_row)
 
