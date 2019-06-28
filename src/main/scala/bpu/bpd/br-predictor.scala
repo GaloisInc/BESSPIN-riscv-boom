@@ -31,7 +31,7 @@ import freechips.rocketchip.rocket.{RocketCoreParams}
 import boom.common._
 import boom.exu._
 import boom.exu.{BranchUnitResp}
-import boom.util.{ElasticReg}
+import boom.util.{ElasticReg, Fold}
 
 /**
  * This is the response packet from the branch predictor. The predictor is
@@ -162,11 +162,11 @@ abstract class BoomBrPredictor(
 
     //ret := ((addr >> 4.U) & 0xf.U) | (old << 4.U) -- for debugging
     val pc = addr >> log2Ceil(coreInstBytes)
-    val foldpc = (pc >> 17) ^ pc
+    val foldpc = Fold(pc, historyLength, pc.getWidth)
     val shamt = 2
     val sz0 = 6
     if (historyLength < (sz0*2+1)) {
-      (old << 1.U) | (foldpc(5) ^ foldpc(6))
+      (old << 1.U) ^ foldpc
     } else {
       val o0 = old(sz0-1,0)
       val o1 = old(2*sz0-1,sz0)
