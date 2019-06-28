@@ -156,7 +156,7 @@ class FetchTargetQueue(num_entries: Int)(implicit p: Parameters) extends BoomMod
 
   when (do_enq) {
     ram(enq_ptr.value) := io.enq.bits
-    cfi_info(enq_ptr.value) := initCfiInfo(io.enq.bits.bim_info.br_seen, io.enq.bits.bim_info.cfi_idx)
+    cfi_info(enq_ptr.value) := initCfiInfo(false.B, io.enq.bits.bim_info.cfi_idx)
     enq_ptr.inc()
   }
 
