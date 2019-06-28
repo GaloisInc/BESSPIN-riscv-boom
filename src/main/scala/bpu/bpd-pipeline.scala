@@ -137,14 +137,15 @@ class BranchPredictionStage(implicit p: Parameters) extends BoomModule
   // Update the RAS
 
   // update RAS based on BTB's prediction information (or the branch-check correction).
-  //val jmp_idx = btb.io.resp.bits.cfi_idx
+  val jmp_idx = btb.io.resp.bits.cfi_idx
 
   btb.io.ras_update := io.f3_ras_update
   btb.io.ras_update.valid := btb.io.resp.valid && !io.f2_stall || io.f3_ras_update.valid && !io.f3_stall
   when (btb.io.resp.valid) {
-    btb.io.ras_update.bits.is_call     := false.B //BpredType.isCall(btb.io.resp.bits.bpd_type)
+    btb.io.ras_update.bits.is_call     := BpredType.isCall(btb.io.resp.bits.bpd_type)
     btb.io.ras_update.bits.is_ret      := BpredType.isReturn(btb.io.resp.bits.bpd_type)
-    //btb.io.ras_update.bits.return_addr := io.f2_aligned_pc + (jmp_idx << 2.U) + 4.U
+    btb.io.ras_update.bits.return_addr := io.f2_aligned_pc + (jmp_idx << log2Ceil(coreInstBytes)) +
+                                                             Mux(btb.io.resp.bits.is_compressed, 2.U, 4.U)
   }
 
   //************************************************

@@ -131,6 +131,8 @@ class BoomBTBResp(implicit p: Parameters) extends BoomBTBBundle
   val cfi_type  = CfiType()  // what type of instruction is this?
   val fetch_pc  = UInt(vaddrBits.W) // the PC we're predicting on (start of the fetch packet).
 
+  val is_compressed = Bool()
+
   val bim_resp  = Valid(new BimResp) // Output from the bimodal table. Valid if prediction provided.
 }
 
@@ -151,6 +153,7 @@ class BoomBTBUpdate(implicit p: Parameters) extends BoomBTBBundle
   // other branch information
   val bpd_type = BpredType()
   val cfi_type = CfiType()
+  val is_compressed = Bool()
 }
 
 /**
