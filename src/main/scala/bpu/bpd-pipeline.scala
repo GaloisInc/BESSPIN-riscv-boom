@@ -55,7 +55,7 @@ class BranchPredInfo(implicit p: Parameters) extends BoomBundle
 /**
  * Wraps the BoomBTB and BrPredictor into a pipeline that is parallel with the Fetch pipeline.
  */
-class BranchPredictionStage(implicit p: Parameters) extends BoomModule
+class BranchPredictionStage(val bankBytes: Int)(implicit p: Parameters) extends BoomModule
 {
   val io = IO(new BoomBundle {
     // Fetch0
@@ -101,7 +101,7 @@ class BranchPredictionStage(implicit p: Parameters) extends BoomModule
   // construct all of the modules
 
   val btb = BoomBTB(boomParams)
-  val bpd = BoomBrPredictor(boomParams)
+  val bpd = BoomBrPredictor(bankBytes, boomParams)
 
   btb.io.status_debug := io.status_debug
   bpd.io.status_prv := io.status_prv

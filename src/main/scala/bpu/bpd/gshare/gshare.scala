@@ -97,11 +97,11 @@ object GShareBrPredictor
  * @param historyLength length of GHR in bits
  */
 class GShareBrPredictor(
+   bankBytes: Int,
    historyLength: Int = 12
    )(implicit p: Parameters)
    extends BoomBrPredictor(historyLength)
    with HasGShareParameters
-   with HasL1ICacheBankedParameters
 {
   require (log2Ceil(nSets) == idxSz)
 

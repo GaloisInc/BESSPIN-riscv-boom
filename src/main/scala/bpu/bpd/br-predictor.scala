@@ -163,7 +163,7 @@ abstract class BoomBrPredictor(
     //ret := ((addr >> 4.U) & 0xf.U) | (old << 4.U) -- for debugging
     val pc = addr >> log2Ceil(coreInstBytes)
     val foldpc = Fold(pc, historyLength, pc.getWidth)
-    val shamt = 2
+   *val shamt = 2
     val sz0 = 6
     if (historyLength < (sz0*2+1)) {
       (old << 1.U) ^ foldpc
@@ -270,7 +270,7 @@ object BoomBrPredictor
    * @param boomParams general boom core parameters that determine the BPU type
    * @return a BoomBrPredictor instance determined by the input parameters
    */
-  def apply(boomParams: BoomCoreParams)(implicit p: Parameters): BoomBrPredictor = {
+  def apply(bankBytes: Int, boomParams: BoomCoreParams)(implicit p: Parameters): BoomBrPredictor = {
     val boomParams: BoomCoreParams = p(freechips.rocketchip.tile.TileKey).core.asInstanceOf[BoomCoreParams]
 
     val enableCondBrPredictor = boomParams.enableBranchPredictor
@@ -291,6 +291,7 @@ object BoomBrPredictor
         br_predictor = Module(new BaseOnlyBrPredictor())
       } else if (useGshare) {
         br_predictor = Module(new GShareBrPredictor(
+          bankBytes = bankBytes,
           historyLength = boomParams.gshare.get.historyLength))
       } else if (useTage) {
         br_predictor = Module(new TageBrPredictor(
