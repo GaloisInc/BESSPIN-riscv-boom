@@ -434,14 +434,11 @@ class FetchControlUnit(implicit p: Parameters) extends BoomModule
   bchecker.io.btb_resp := f3_btb_resp
   bchecker.io.bpd_resp := io.f3_bpd_resp
 
-  // who wins? bchecker or bpd? or jal?
-  val jal_overrides_bpd = f3_has_jal && f3_jal_idx < f3_bpd_redirect_cfiidx && f3_bpd_may_redirect_taken
+  // who wins? bchecker or bpd?
   val f3_bpd_overrides_bcheck =
-    f3_bpd_may_redirect &&
-    !jal_overrides_bpd &&
+    f3_bpd_may_redirect && !(f3_has_jal && f3_jal_idx < f3_bpd_redirect_cfiidx) &&
     (!bchecker.io.req.valid || (f3_bpd_redirect_cfiidx < bchecker.io.req_cfi_idx))
-  f3_req.valid := f3_valid && (bchecker.io.req.valid ||
-                  (f3_bpd_may_redirect && !jal_overrides_bpd)) // && !(f0_redirect_val)
+  f3_req.valid := f3_valid && (f3_bpd_may_redirect || bchecker.io.req.valid)
   f3_req.bits.addr := Mux(f3_bpd_overrides_bcheck, f3_bpd_redirect_target, bchecker.io.req.bits.addr)
 
   // This has a bad effect on QoR.
@@ -482,10 +479,9 @@ class FetchControlUnit(implicit p: Parameters) extends BoomModule
   when (f3_req.valid) {
     // f3_bpd only requests taken redirections on btb misses.
     // f3_req via bchecker only ever requests nextline_pc or jump targets (which we don't track in ghistory).
-    f3_taken := Mux(f3_bpd_overrides_bcheck, (f3_bpd_may_redirect_taken && !jal_overrides_bpd), false.B)
+    f3_taken := Mux(f3_bpd_overrides_bcheck, f3_bpd_may_redirect_taken, false.B)
   } .elsewhen (f3_btb_resp.valid) {
     f3_taken := f3_btb_resp.bits.taken
-    // TODO XXX f3_taken logic is wrong. it looks to be missing bpd? Or is that f3_req.valid?
   }
 
   f3_fetch_bundle.pc := f3_imemresp.pc
