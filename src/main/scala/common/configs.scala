@@ -138,7 +138,7 @@ class WithSmallBooms extends Config((site, here, up) => {
       numStqEntries = 8,
       maxBrCount = 4,
       bpdBaseOnly = None,
-      ftq = FtqParameters(nEntries=8),
+      ftq = FtqParameters(nEntries=16),
       gshare = Some(GShareParameters(historyLength=11, numSets=2048)),
       tage = None,
       bpdRandom = None,
