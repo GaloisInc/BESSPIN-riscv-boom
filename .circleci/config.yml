@@ -425,6 +425,33 @@ jobs:
                     make run-bmark-tests-fast -C ../chipyard/sims/verisim CONFIG=SmallBoomAndRocketConfig SUB_PROJECT=boom TOP=BoomRocketSystem
                     make run-asm-tests-fast -C ../chipyard/sims/verisim CONFIG=SmallBoomAndRocketConfig SUB_PROJECT=boom TOP=BoomRocketSystem
 
+    copy-environment:
+        docker:
+            - image: riscvboom/riscvboom-images:0.0.5
+        environment:
+            JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
+            TERM: dumb
+        steps:
+            - restore_cache:
+                keys:
+                    - riscv-tools-installed-v3-{{ checksum "CHIPYARD.hash" }}
+            - run:
+                name: Move riscv-tools to remote server
+                command: .circleci/move-tools-ext.sh
+                no_output_timeout: 120m
+
+    clean-environment:
+        docker:
+            - image: riscvboom/riscvboom-images:0.0.5
+        environment:
+            JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
+            TERM: dumb
+        steps:
+            - run:
+                name: Clean up files on remote server
+                command: .circleci/clean-ext.sh
+                no_output_timeout: 120m
+
 # Order and dependencies of jobs to run
 workflows:
     version: 2
@@ -443,19 +470,32 @@ workflows:
                 requires:
                     - install-riscv-tools
 
+            # Move files to remote
+            - copy-environment:
+                requires:
+                    - prepare-build-environment
+
             # Prepare the verilator builds
             - prepare-smallrv32unifiedboomconfig:
                 requires:
-                    - prepare-build-environment
+                    - copy-environment
             - prepare-smallboomconfig:
                 requires:
-                    - prepare-build-environment
+                    - copy-environment
             - prepare-mediumboomconfig:
                 requires:
-                    - prepare-build-environment
+                    - copy-environment
             - prepare-smallboomandrocketconfig:
                 requires:
-                    - prepare-build-environment
+                    - copy-environment
+
+            # Clean up environment after build
+            - clean-environment:
+                requires:
+                    - prepare-smallrv32unifiedboomconfig
+                    - prepare-smallboomconfig
+                    - prepare-mediumboomconfig
+                    - prepare-smallboomandrocketconfig
 
             # Run the SmallRV32UnifiedBoomConfig tests
             - smallrv32unifiedboomconfig-run-riscv-tests:

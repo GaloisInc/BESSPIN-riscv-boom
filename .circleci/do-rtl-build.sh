@@ -5,12 +5,17 @@
 # turn echo on and error on earliest command
 set -ex
 
-# this file assumes cache is updated correctly
-# copy project to subdir (just in case)
-rm -rf $HOME/chipyard/generators/boom
-cp -r $HOME/project $HOME/chipyard/generators/boom
+WORK_DIR=/scratch/abejgonza/$CIRCLE_BRANCH-$CIRCLE_SHA1
 
-# enter the verisim directory and build the specific config
-cd $HOME/chipyard/sims/verisim
-make clean
-make SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem JAVA_ARGS="-Xmx2G -Xss8M"
+SERVER=abe.gonzalez@a5.millennium.berkeley.edu
+
+rsync -avz -e 'ssh' /home/riscvuser/chipyard $SERVER:$WORK_DIR/$1/
+
+RUN=ssh -t $SERVER
+
+# enter the verisim directory and build the specific config on remote server
+$RUN "make -C $WORK_DIR/$1/chipyard/sims/verisim clean"
+$RUN "make -C $WORK_DIR/$1/chipyard/sims/verisim SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem JAVA_ARGS=\"-Xmx2G -Xss8M\""
+
+# copy back the final build
+rsync -avz -e 'ssh' $SERVER:$WORK_DIR/$1/chipyard /home/riscvuser/chipyard
