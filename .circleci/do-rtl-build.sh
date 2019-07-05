@@ -16,6 +16,9 @@ run () {
     ssh -o "StrictHostKeyChecking no" -t $SERVER $1
 }
 
+# set stricthostkeychecking to no (must happen before rsync)
+run "echo \"Ping $SERVER\""
+
 copy /home/riscvuser/chipyard $SERVER:$WORK_DIR/$1/
 
 # enter the verisim directory and build the specific config on remote server

@@ -9,4 +9,11 @@ copy () {
     rsync -avz -e 'ssh -o StrictHostKeyChecking no' $1 $2
 }
 
+run () {
+    ssh -o "StrictHostKeyChecking no" -t $SERVER $1
+}
+
+# set stricthostkeychecking to no (must happen before rsync)
+run "echo \"Ping $SERVER\""
+
 copy /home/riscvuser/riscv-tools-install $SERVER:$WORK_DIR/
