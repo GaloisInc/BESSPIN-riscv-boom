@@ -505,16 +505,16 @@ workflows:
             # Prepare the verilator builds
             - prepare-smallrv32unifiedboomconfig:
                 requires:
-                    - copy-environment
+                    - copy-riscv-tools-environment
             - prepare-smallboomconfig:
                 requires:
-                    - copy-environment
+                    - copy-riscv-tools-environment
             - prepare-mediumboomconfig:
                 requires:
-                    - copy-environment
+                    - copy-riscv-tools-environment
             - prepare-smallboomandrocketconfig:
                 requires:
-                    - copy-environment
+                    - copy-riscv-tools-environment
 
             # Clean up environment after build
             - clean-environment:
