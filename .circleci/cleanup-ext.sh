@@ -4,5 +4,6 @@ set -ex
 
 WORK_DIR=/scratch/abejgonza/$CIRCLE_BRANCH-$CIRCLE_SHA1
 SERVER=abe.gonzalez@a5.millennium.berkeley.edu
+RUN=ssh -t -o "StrictHostKeyChecking no" $SERVER
 
-ssh -o "StrictHostKeyChecking no" $SERVER "rm -rf $WORK_DIR"
+$RUN "rm -rf $WORK_DIR"

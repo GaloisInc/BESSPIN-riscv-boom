@@ -58,9 +58,6 @@ jobs:
             - checkout
             - restore_cache:
                 keys:
-                    - riscv-tools-installed-v3-{{ checksum "CHIPYARD.hash" }}
-            - restore_cache:
-                keys:
                     - chipyard-with-verilator-v9-{{ checksum "CHIPYARD.hash" }}
             - run:
                 name: Building SmallRV32UnifiedBoomConfig using Verilator
@@ -81,9 +78,6 @@ jobs:
                 fingerprints:
                     - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
-            - restore_cache:
-                keys:
-                    - riscv-tools-installed-v3-{{ checksum "CHIPYARD.hash" }}
             - restore_cache:
                 keys:
                     - chipyard-with-verilator-v9-{{ checksum "CHIPYARD.hash" }}
@@ -108,9 +102,6 @@ jobs:
             - checkout
             - restore_cache:
                 keys:
-                    - riscv-tools-installed-v3-{{ checksum "CHIPYARD.hash" }}
-            - restore_cache:
-                keys:
                     - chipyard-with-verilator-v9-{{ checksum "CHIPYARD.hash" }}
             - run:
                 name: Building MediumBoomConfig using Verilator
@@ -131,9 +122,6 @@ jobs:
                 fingerprints:
                     - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
-            - restore_cache:
-                keys:
-                    - riscv-tools-installed-v3-{{ checksum "CHIPYARD.hash" }}
             - restore_cache:
                 keys:
                     - chipyard-with-verilator-v9-{{ checksum "CHIPYARD.hash" }}
@@ -158,9 +146,6 @@ jobs:
             - checkout
             - restore_cache:
                 keys:
-                    - riscv-tools-installed-v3-{{ checksum "CHIPYARD.hash" }}
-            - restore_cache:
-                keys:
                     - chipyard-with-verilator-v9-{{ checksum "CHIPYARD.hash" }}
             - run:
                 name: Building MegaBoomConfig using Verilator
@@ -181,9 +166,6 @@ jobs:
                 fingerprints:
                     - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
-            - restore_cache:
-                keys:
-                    - riscv-tools-installed-v3-{{ checksum "CHIPYARD.hash" }}
             - restore_cache:
                 keys:
                     - chipyard-with-verilator-v9-{{ checksum "CHIPYARD.hash" }}

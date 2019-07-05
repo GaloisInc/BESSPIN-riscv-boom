@@ -6,16 +6,15 @@
 set -ex
 
 WORK_DIR=/scratch/abejgonza/$CIRCLE_BRANCH-$CIRCLE_SHA1
-
 SERVER=abe.gonzalez@a5.millennium.berkeley.edu
+RUN=ssh -t -o "StrictHostKeyChecking no" $SERVER
+RSYNC=rsync -avz -e 'ssh -o StrictHostKeyChecking no'
 
-rsync -avz -e 'ssh' /home/riscvuser/chipyard $SERVER:$WORK_DIR/$1/
-
-RUN=ssh -t $SERVER
+$RSYNC /home/riscvuser/chipyard $SERVER:$WORK_DIR/$1/
 
 # enter the verisim directory and build the specific config on remote server
 $RUN "make -C $WORK_DIR/$1/chipyard/sims/verisim RISCV=$WORK_DIR/riscv-tools-install clean"
 $RUN "make -C $WORK_DIR/$1/chipyard/sims/verisim RISCV=$WORK_DIR/riscv-tools-install SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem JAVA_ARGS=\"-Xmx2G -Xss8M\""
 
 # copy back the final build
-rsync -avz -e 'ssh' $SERVER:$WORK_DIR/$1/chipyard /home/riscvuser/chipyard
+$RSYNC $SERVER:$WORK_DIR/$1/chipyard /home/riscvuser/chipyard
