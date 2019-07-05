@@ -14,8 +14,8 @@ rsync -avz -e 'ssh' /home/riscvuser/chipyard $SERVER:$WORK_DIR/$1/
 RUN=ssh -t $SERVER
 
 # enter the verisim directory and build the specific config on remote server
-$RUN "make -C $WORK_DIR/$1/chipyard/sims/verisim clean"
-$RUN "make -C $WORK_DIR/$1/chipyard/sims/verisim SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem JAVA_ARGS=\"-Xmx2G -Xss8M\""
+$RUN "make -C $WORK_DIR/$1/chipyard/sims/verisim RISCV=$WORK_DIR/riscv-tools-install clean"
+$RUN "make -C $WORK_DIR/$1/chipyard/sims/verisim RISCV=$WORK_DIR/riscv-tools-install SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem JAVA_ARGS=\"-Xmx2G -Xss8M\""
 
 # copy back the final build
 rsync -avz -e 'ssh' $SERVER:$WORK_DIR/$1/chipyard /home/riscvuser/chipyard
