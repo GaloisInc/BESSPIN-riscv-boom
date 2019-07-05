@@ -443,7 +443,7 @@ jobs:
                     make run-bmark-tests-fast -C ../chipyard/sims/verisim CONFIG=SmallBoomAndRocketConfig SUB_PROJECT=boom TOP=BoomRocketSystem
                     make run-asm-tests-fast -C ../chipyard/sims/verisim CONFIG=SmallBoomAndRocketConfig SUB_PROJECT=boom TOP=BoomRocketSystem
 
-    copy-environment:
+    copy-riscv-tools-environment:
         docker:
             - image: riscvboom/riscvboom-images:0.0.5
         environment:
@@ -460,7 +460,7 @@ jobs:
             - run:
                 name: Move riscv-tools to remote server
                 command: |
-                    .circleci/clean-ext.sh
+                    .circleci/cleanup-ext.sh
                     .circleci/move-tools-ext.sh
                 no_output_timeout: 120m
 
@@ -476,7 +476,7 @@ jobs:
                     - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - run:
                 name: Clean up files on remote server
-                command: .circleci/clean-ext.sh
+                command: .circleci/cleanup-ext.sh
                 no_output_timeout: 120m
 
 # Order and dependencies of jobs to run
@@ -498,7 +498,7 @@ workflows:
                     - install-riscv-tools
 
             # Move files to remote
-            - copy-environment:
+            - copy-riscv-tools-environment:
                 requires:
                     - prepare-build-environment
 
