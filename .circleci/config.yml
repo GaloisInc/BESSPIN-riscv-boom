@@ -52,6 +52,9 @@ jobs:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
         steps:
+            - add_ssh_keys:
+                fingerprints:
+                    - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
             - restore_cache:
                 keys:
@@ -74,6 +77,9 @@ jobs:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
         steps:
+            - add_ssh_keys:
+                fingerprints:
+                    - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
             - restore_cache:
                 keys:
@@ -96,6 +102,9 @@ jobs:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
         steps:
+            - add_ssh_keys:
+                fingerprints:
+                    - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
             - restore_cache:
                 keys:
@@ -118,6 +127,9 @@ jobs:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
         steps:
+            - add_ssh_keys:
+                fingerprints:
+                    - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
             - restore_cache:
                 keys:
@@ -140,6 +152,9 @@ jobs:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
         steps:
+            - add_ssh_keys:
+                fingerprints:
+                    - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
             - restore_cache:
                 keys:
@@ -162,6 +177,9 @@ jobs:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
         steps:
+            - add_ssh_keys:
+                fingerprints:
+                    - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
             - restore_cache:
                 keys:
@@ -432,6 +450,9 @@ jobs:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
         steps:
+            - add_ssh_keys:
+                fingerprints:
+                    - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - restore_cache:
                 keys:
                     - riscv-tools-installed-v3-{{ checksum "CHIPYARD.hash" }}
@@ -447,6 +468,9 @@ jobs:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
         steps:
+            - add_ssh_keys:
+                fingerprints:
+                    - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - run:
                 name: Clean up files on remote server
                 command: .circleci/clean-ext.sh
