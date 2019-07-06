@@ -9,7 +9,14 @@ set -ex
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 source $SCRIPT_DIR/server.sh
 
-if [ ! -d "$HOME/chipyard" ]; then
+# make boom-template verilator version
+# set stricthostkeychecking to no (must happen before rsync)
+run "echo \"Ping $SERVER\""
+
+# does chipyard exist on server
+run "[ -d $WORK_DIR/chipyard ]"
+
+if [ $? == 1 ]; then
     cd $HOME
 
     git clone --progress --verbose https://github.com/ucb-bar/project-template.git chipyard
@@ -25,10 +32,6 @@ if [ ! -d "$HOME/chipyard" ]; then
     # move the pull request riscv-boom repo into boom-template
     rm -rf $HOME/chipyard/generators/boom
     cp -r $HOME/project $HOME/chipyard/generators/boom/
-
-    # make boom-template verilator version
-    # set stricthostkeychecking to no (must happen before rsync)
-    run "echo \"Ping $SERVER\""
 
     copy /home/riscvuser/chipyard $SERVER:$WORK_DIR/
 

@@ -10,7 +10,7 @@ SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 source $SCRIPT_DIR/server.sh
 
 JOB_DIR=$WORK_DIR/chipyard-$1
-SIM_DIR=$JOB_DIR/sims/verisim
+SIM_DIR=$JOB_DIR/chipyard/sims/verisim
 
 # set stricthostkeychecking to no (must happen before rsync)
 run "echo \"Ping $SERVER\""
@@ -23,4 +23,4 @@ run "make -C $SIM_DIR clean"
 run "make -C $SIM_DIR RISCV=$WORK_DIR/riscv-tools-install VERILATOR_INSTALL_DIR=$WORK_DIR/verilator JAVA_ARGS=\"-Xmx8G -Xss8M\" SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem"
 
 # copy back the final build
-copy $SERVER:$JOB_DIR /home/riscvuser/chipyard
+copy $SERVER:$JOB_DIR/chipyard /home/riscvuser/chipyard
