@@ -5,6 +5,17 @@
 # turn echo on and error on earliest command
 set -ex
 
+WORK_DIR=/scratch/abejgonza/$CIRCLE_BRANCH-$CIRCLE_SHA1
+SERVER=abe.gonzalez@a5.millennium.berkeley.edu
+
+copy () {
+    rsync -avz -e 'ssh' $1 $2
+}
+
+run () {
+    ssh -o "StrictHostKeyChecking no" -t $SERVER $1
+}
+
 if [ ! -d "$HOME/chipyard" ]; then
     cd $HOME
 
@@ -23,7 +34,13 @@ if [ ! -d "$HOME/chipyard" ]; then
     cp -r $HOME/project $HOME/chipyard/generators/boom/
 
     # make boom-template verilator version
-    cd $HOME/chipyard/sims/verisim
-    make verilator_install
+    # set stricthostkeychecking to no (must happen before rsync)
+    run "echo \"Ping $SERVER\""
+
+    copy /home/riscvuser/chipyard $SERVER:$WORK_DIR/
+
+    run "cd $HOME/chipyard/sims/verisim && make verilator_install"
+
+    copy $SERVER:$WORK_DIR/chipyard /home/riscvuser/chipyard
 fi
 
