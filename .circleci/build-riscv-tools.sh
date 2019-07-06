@@ -4,7 +4,9 @@
 
 # turn echo on and error on earliest command
 set -ex
+
 cd $HOME
+
 if [ ! -d "$HOME/riscv-tools-install" ]; then
     git clone --progress --verbose https://github.com/ucb-bar/project-template.git chipyard
     cd $HOME/chipyard

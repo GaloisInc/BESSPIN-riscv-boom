@@ -5,16 +5,8 @@
 # turn echo on and error on earliest command
 set -ex
 
-WORK_DIR=/scratch/abejgonza/$CIRCLE_BRANCH-$CIRCLE_SHA1
-SERVER=abe.gonzalez@a5.millennium.berkeley.edu
-
-copy () {
-    rsync -avz -e 'ssh' $1 $2
-}
-
-run () {
-    ssh -o "StrictHostKeyChecking no" -t $SERVER $1
-}
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+source $SCRIPT_DIR/server.sh
 
 if [ ! -d "$HOME/chipyard" ]; then
     cd $HOME
@@ -39,7 +31,7 @@ if [ ! -d "$HOME/chipyard" ]; then
 
     copy /home/riscvuser/chipyard $SERVER:$WORK_DIR/
 
-    run "cd $HOME/chipyard/sims/verisim && make verilator_install"
+    run "cd $WORK_DIR/chipyard/sims/verisim && make verilator_install"
 
     copy $SERVER:$WORK_DIR/chipyard /home/riscvuser/chipyard
 fi
