@@ -5,6 +5,7 @@
 # turn echo on and error on earliest command
 set -ex
 
+# get remote exec variables
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 source $SCRIPT_DIR/server.sh
 
@@ -31,7 +32,7 @@ if [ ! -d "$HOME/chipyard" ]; then
 
     copy /home/riscvuser/chipyard $SERVER:$WORK_DIR/
 
-    run "cd $WORK_DIR/chipyard/sims/verisim && make verilator_install"
+    run "make -C $WORK_DIR/chipyard/sims/verisim VERILATOR_INSTALL_DIR=$WORK_DIR/verilator verilator_install"
 
     copy $SERVER:$WORK_DIR/chipyard /home/riscvuser/chipyard
 fi
