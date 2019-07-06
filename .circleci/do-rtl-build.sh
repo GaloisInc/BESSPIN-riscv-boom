@@ -15,6 +15,7 @@ SIM_DIR=$JOB_DIR/sims/verisim
 # set stricthostkeychecking to no (must happen before rsync)
 run "echo \"Ping $SERVER\""
 
+run "mkdir -p $JOB_DIR"
 copy /home/riscvuser/chipyard $SERVER:$JOB_DIR
 
 # enter the verisim directory and build the specific config on remote server
