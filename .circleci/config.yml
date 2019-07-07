@@ -33,11 +33,25 @@ jobs:
             TERM: dumb
         steps:
             - checkout
+            - restore_cache:
+                keys:
+                    - chipyard-v10-{{ checksum "CHIPYARD.hash" }}
+            - restore_cache:
+                keys:
+                    - verilator-v10-{{ checksum "CHIPYARD.hash" }}
             - run:
                 name: Build Verilator and setup build environment
                 command: |
                     .circleci/prepare-for-rtl-build.sh
                 no_output_timeout: 120m
+            - save_cache:
+                key: chipyard-v10-{{ checksum "CHIPYARD.hash" }}
+                paths:
+                    - "/home/riscvuser/chipyard"
+            - save_cache:
+                key: verilator-v10-{{ checksum "CHIPYARD.hash" }}
+                paths:
+                    - "/home/riscvuser/verilator"
     prepare-smallrv32unifiedboomconfig:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -49,6 +63,9 @@ jobs:
                 fingerprints:
                     - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
+            - restore_cache:
+                keys:
+                    - chipyard-with-verilator-v10-{{ checksum "CHIPYARD.hash" }}
             - run:
                 name: Building SmallRV32UnifiedBoomConfig using Verilator
                 command: .circleci/do-rtl-build.sh SmallRV32UnifiedBoomConfig
@@ -68,6 +85,9 @@ jobs:
                 fingerprints:
                     - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
+            - restore_cache:
+                keys:
+                    - chipyard-with-verilator-v10-{{ checksum "CHIPYARD.hash" }}
             - run:
                 name: Building SmallBoomConfig using Verilator
                 command: .circleci/do-rtl-build.sh SmallBoomConfig
@@ -87,6 +107,9 @@ jobs:
                 fingerprints:
                     - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
+            - restore_cache:
+                keys:
+                    - chipyard-with-verilator-v10-{{ checksum "CHIPYARD.hash" }}
             - run:
                 name: Building MediumBoomConfig using Verilator
                 command: .circleci/do-rtl-build.sh MediumBoomConfig
@@ -106,6 +129,9 @@ jobs:
                 fingerprints:
                     - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
+            - restore_cache:
+                keys:
+                    - chipyard-with-verilator-v10-{{ checksum "CHIPYARD.hash" }}
             - run:
                 name: Building LargeBoomConfig using Verilator
                 command: .circleci/do-rtl-build.sh LargeBoomConfig
@@ -125,6 +151,9 @@ jobs:
                 fingerprints:
                     - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
+            - restore_cache:
+                keys:
+                    - chipyard-with-verilator-v10-{{ checksum "CHIPYARD.hash" }}
             - run:
                 name: Building MegaBoomConfig using Verilator
                 command: .circleci/do-rtl-build.sh MegaBoomConfig
@@ -144,6 +173,9 @@ jobs:
                 fingerprints:
                     - "e7:69:4e:24:88:f6:cd:7c:62:da:51:03:54:c4:7f:ec"
             - checkout
+            - restore_cache:
+                keys:
+                    - chipyard-with-verilator-v10-{{ checksum "CHIPYARD.hash" }}
             - run:
                 name: Building SmallBoomAndRocketConfig using Verilator
                 command: .circleci/do-rtl-build.sh SmallBoomAndRocketConfig
@@ -152,7 +184,6 @@ jobs:
                 key: smallboomandrocketconfig-{{ .Branch }}-{{ .Revision }}
                 paths:
                     - "/home/riscvuser/chipyard"
-
     run-scala-checkstyle:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -164,7 +195,6 @@ jobs:
             - run:
                 name: Run Scala checkstyle
                 command: make checkstyle
-
     smallrv32unifiedboomconfig-run-csmith-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -183,7 +213,6 @@ jobs:
                 name: Run SmallRV32UnifiedBoomConfig csmith tests
                 command: .circleci/build-run-csmith-tests.sh SmallRV32UnifiedBoomConfig 50
                 no_output_timeout: 30m
-
     smallrv32unifiedboomconfig-run-riscv-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -202,7 +231,6 @@ jobs:
                 name: Run SmallRV32UnifiedBoomConfig riscv tests
                 command: |
                     make run-asm-tests-fast -C ../chipyard/sims/verisim CONFIG=SmallRV32UnifiedBoomConfig SUB_PROJECT=boom TOP=BoomRocketSystem
-
     smallboomconfig-run-csmith-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -221,7 +249,6 @@ jobs:
                 name: Run SmallBoomConfig csmith tests
                 command: .circleci/build-run-csmith-tests.sh SmallBoomConfig 50
                 no_output_timeout: 30m
-
     smallboomconfig-run-riscv-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -241,7 +268,6 @@ jobs:
                 command: |
                     make run-bmark-tests-fast -C ../chipyard/sims/verisim CONFIG=SmallBoomConfig SUB_PROJECT=boom TOP=BoomRocketSystem
                     make run-asm-tests-fast -C ../chipyard/sims/verisim CONFIG=SmallBoomConfig SUB_PROJECT=boom TOP=BoomRocketSystem
-
     mediumboomconfig-run-csmith-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -260,7 +286,6 @@ jobs:
                 name: Run MediumBoomConfig csmith tests
                 command: .circleci/build-run-csmith-tests.sh MediumBoomConfig 50
                 no_output_timeout: 30m
-
     mediumboomconfig-run-riscv-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -280,7 +305,6 @@ jobs:
                 command: |
                     make run-bmark-tests-fast -C ../chipyard/sims/verisim CONFIG=MediumBoomConfig SUB_PROJECT=boom TOP=BoomRocketSystem
                     make run-asm-tests-fast -C ../chipyard/sims/verisim CONFIG=MediumBoomConfig SUB_PROJECT=boom TOP=BoomRocketSystem
-
     largeboomconfig-run-csmith-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -295,12 +319,10 @@ jobs:
             - restore_cache:
                 keys:
                     - largeboomconfig-{{ .Branch }}-{{ .Revision }}
-
             - run:
                 name: Run LargeBoomConfig csmith tests
                 command: .circleci/build-run-csmith-tests.sh LargeBoomConfig 50
                 no_output_timeout: 30m
-
     largeboomconfig-run-riscv-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -320,7 +342,6 @@ jobs:
                 command: |
                     make run-bmark-tests-fast -C ../chipyard/sims/verisim CONFIG=LargeBoomConfig SUB_PROJECT=boom TOP=BoomRocketSystem
                     make run-asm-tests-fast -C ../chipyard/sims/verisim CONFIG=LargeBoomConfig SUB_PROJECT=boom TOP=BoomRocketSystem
-
     megaboomconfig-run-csmith-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -340,7 +361,6 @@ jobs:
                 name: Run MegaBoomConfig csmith tests
                 command: .circleci/build-run-csmith-tests.sh MegaBoomConfig 50
                 no_output_timeout: 30m
-
     megaboomconfig-run-riscv-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -360,7 +380,6 @@ jobs:
                 command: |
                     make run-bmark-tests-fast -C ../chipyard/sims/verisim CONFIG=MegaBoomConfig SUB_PROJECT=boom TOP=BoomRocketSystem
                     make run-asm-tests-fast -C ../chipyard/sims/verisim CONFIG=MegaBoomConfig SUB_PROJECT=boom TOP=BoomRocketSystem
-
     smallboomandrocketconfig-run-csmith-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -379,7 +398,6 @@ jobs:
                 name: Run SmallBoomAndRocketConfig csmith tests
                 command: .circleci/build-run-csmith-tests.sh SmallBoomAndRocketConfig 50
                 no_output_timeout: 30m
-
     smallboomandrocketconfig-run-riscv-tests:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -399,8 +417,7 @@ jobs:
                 command: |
                     make run-bmark-tests-fast -C ../chipyard/sims/verisim CONFIG=SmallBoomAndRocketConfig SUB_PROJECT=boom TOP=BoomRocketSystem
                     make run-asm-tests-fast -C ../chipyard/sims/verisim CONFIG=SmallBoomAndRocketConfig SUB_PROJECT=boom TOP=BoomRocketSystem
-
-    copy-riscv-tools-environment:
+    copy-environment:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
         environment:
@@ -414,13 +431,18 @@ jobs:
             - restore_cache:
                 keys:
                     - riscv-tools-installed-v3-{{ checksum "CHIPYARD.hash" }}
+            - restore_cache:
+                keys:
+                    - chipyard-v10-{{ checksum "CHIPYARD.hash" }}
+            - restore_cache:
+                keys:
+                    - verilator-v10-{{ checksum "CHIPYARD.hash" }}
             - run:
-                name: Move riscv-tools to remote server
+                name: Move riscv-tools, chipyard, and verilator to remote server
                 command: |
                     .circleci/cleanup-ext.sh
-                    .circleci/move-tools-ext.sh
+                    .circleci/move-environment.sh
                 no_output_timeout: 120m
-
     clean-environment:
         docker:
             - image: riscvboom/riscvboom-images:0.0.8
@@ -445,33 +467,30 @@ workflows:
             - install-riscv-tools
 
             # Build verilator
-            - prepare-build-environment:
-                requires:
-                    - install-riscv-tools
+            - prepare-build-environment
 
             # Run generic syntax checking
-            - run-scala-checkstyle:
-                requires:
-                    - install-riscv-tools
+            - run-scala-checkstyle
 
             # Move files to remote
-            - copy-riscv-tools-environment:
+            - copy-environment:
                 requires:
                     - prepare-build-environment
+                    - install-riscv-tools
 
             # Prepare the verilator builds
             - prepare-smallrv32unifiedboomconfig:
                 requires:
-                    - copy-riscv-tools-environment
+                    - copy-environment
             - prepare-smallboomconfig:
                 requires:
-                    - copy-riscv-tools-environment
+                    - copy-environment
             - prepare-mediumboomconfig:
                 requires:
-                    - copy-riscv-tools-environment
+                    - copy-environment
             - prepare-smallboomandrocketconfig:
                 requires:
-                    - copy-riscv-tools-environment
+                    - copy-environment
 
             # Clean up environment after build
             - clean-environment:

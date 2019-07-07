@@ -23,4 +23,4 @@ run "make -C $SIM_DIR clean"
 run "make -C $SIM_DIR RISCV=$WORK_DIR/riscv-tools-install VERILATOR_INSTALL_DIR=$WORK_DIR/verilator JAVA_ARGS=\"-Xmx8G -Xss8M\" SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem"
 
 # copy back the final build
-copy $SERVER:$JOB_DIR/ /home/riscvuser/chipyard
+copy $SERVER:$JOB_DIR/ $HOME/chipyard
