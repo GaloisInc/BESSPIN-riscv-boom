@@ -2,9 +2,6 @@
 
 # build verilator and init submodules with rocket-chip hash given by riscv-boom
 
-# turn echo on and error on earliest command
-set -ex
-
 # get remote exec variables
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 source $SCRIPT_DIR/server.sh
@@ -15,8 +12,12 @@ run "echo \"Ping $SERVER\""
 
 # does chipyard exist on server
 run "[ -d $WORK_DIR/chipyard ]"
+ret_code = $?
 
-if [ $? == 1 ]; then
+# turn echo on and error on earliest command
+set -ex
+
+if [ $ret_code == 1 ]; then
     cd $HOME
 
     git clone --progress --verbose https://github.com/ucb-bar/project-template.git chipyard
