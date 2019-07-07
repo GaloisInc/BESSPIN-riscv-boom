@@ -27,6 +27,9 @@ if [ ! -d "$HOME/verilator" ] && [ ! -d "$HOME/chipyard" ]; then
     rm -rf $HOME/chipyard/generators/boom
     cp -r $HOME/project $HOME/chipyard/generators/boom/
 
+    # set stricthostkeychecking to no (must happen before rsync)
+    run "echo \"Ping $SERVER\""
+
     copy $HOME/chipyard $SERVER:$WORK_DIR/
 
     run "make -C $WORK_DIR/chipyard/sims/verisim VERILATOR_INSTALL_DIR=$WORK_DIR/verilator verilator_install"
