@@ -12,7 +12,7 @@ run "echo \"Ping $SERVER\""
 
 # does chipyard exist on server
 run "[ -d $WORK_DIR/chipyard ]"
-ret_code = $?
+ret_code=$?
 
 # turn echo on and error on earliest command
 set -ex
