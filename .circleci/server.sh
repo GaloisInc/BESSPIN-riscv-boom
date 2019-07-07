@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#SERVER=abe.gonzalez@a5.millennium.berkeley.edu
-#CI_DIR=/vm/scratch/circleci
 WORK_DIR=$CI_DIR/$CIRCLE_BRANCH-$CIRCLE_SHA1
 
 copy () {

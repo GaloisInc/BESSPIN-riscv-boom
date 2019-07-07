@@ -37,7 +37,5 @@ if [ $ret_code == 1 ]; then
     copy /home/riscvuser/chipyard $SERVER:$WORK_DIR/
 
     run "make -C $WORK_DIR/chipyard/sims/verisim VERILATOR_INSTALL_DIR=$WORK_DIR/verilator verilator_install"
-
-    copy $SERVER:$WORK_DIR/chipyard /home/riscvuser/chipyard
 fi
 
