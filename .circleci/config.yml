@@ -7,7 +7,7 @@ version: 2
 jobs:
     install-riscv-tools:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -27,7 +27,7 @@ jobs:
                     - "/home/riscvuser/riscv-tools-install"
     prepare-build-environment:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -54,7 +54,7 @@ jobs:
                     - "/home/riscvuser/verilator"
     prepare-smallrv32unifiedboomconfig:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -76,7 +76,7 @@ jobs:
                     - "/home/riscvuser/chipyard"
     prepare-smallboomconfig:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -98,7 +98,7 @@ jobs:
                     - "/home/riscvuser/chipyard"
     prepare-mediumboomconfig:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -120,7 +120,7 @@ jobs:
                     - "/home/riscvuser/chipyard"
     prepare-largeboomconfig:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -142,7 +142,7 @@ jobs:
                     - "/home/riscvuser/chipyard"
     prepare-megaboomconfig:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -164,7 +164,7 @@ jobs:
                     - "/home/riscvuser/chipyard"
     prepare-smallboomandrocketconfig:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -186,7 +186,7 @@ jobs:
                     - "/home/riscvuser/chipyard"
     run-scala-checkstyle:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -197,7 +197,7 @@ jobs:
                 command: make checkstyle
     smallrv32unifiedboomconfig-run-csmith-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -218,7 +218,7 @@ jobs:
                 no_output_timeout: 30m
     smallrv32unifiedboomconfig-run-riscv-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -238,7 +238,7 @@ jobs:
                 command: .circleci/run-tests.sh SmallRV32UnifiedBoomConfig
     smallboomconfig-run-csmith-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -259,7 +259,7 @@ jobs:
                 no_output_timeout: 30m
     smallboomconfig-run-riscv-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -279,7 +279,7 @@ jobs:
                 command: .circleci/run-tests.sh SmallBoomConfig
     mediumboomconfig-run-csmith-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -300,7 +300,7 @@ jobs:
                 no_output_timeout: 30m
     mediumboomconfig-run-riscv-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -320,7 +320,7 @@ jobs:
                 command: .circleci/run-tests.sh MediumBoomConfig
     largeboomconfig-run-csmith-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -341,7 +341,7 @@ jobs:
                 no_output_timeout: 30m
     largeboomconfig-run-riscv-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -361,7 +361,7 @@ jobs:
                 command: .circleci/run-tests.sh LargeBoomConfig
     megaboomconfig-run-csmith-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -382,7 +382,7 @@ jobs:
                 no_output_timeout: 30m
     megaboomconfig-run-riscv-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -402,7 +402,7 @@ jobs:
                 command: .circleci/run-tests.sh MegaBoomConfig
     smallboomandrocketconfig-run-csmith-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -423,7 +423,7 @@ jobs:
                 no_output_timeout: 30m
     smallboomandrocketconfig-run-riscv-tests:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -443,7 +443,7 @@ jobs:
                 command: .circleci/run-tests.sh SmallBoomAndRocketConfig
     copy-environment:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
@@ -469,7 +469,7 @@ jobs:
                 no_output_timeout: 120m
     clean-environment:
         docker:
-            - image: riscvboom/riscvboom-images:0.0.9
+            - image: riscvboom/riscvboom-images:0.0.10
         environment:
             JVM_OPTS: -Xmx3200m # Customize the JVM maximum heap limit
             TERM: dumb
