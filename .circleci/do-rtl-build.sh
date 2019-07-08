@@ -7,20 +7,20 @@ set -ex
 
 # get remote exec variables
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
-source $SCRIPT_DIR/server.sh
+source $SCRIPT_DIR/defaults.sh
 
-JOB_DIR=$WORK_DIR/chipyard-$1
-SIM_DIR=$JOB_DIR/chipyard/sims/verisim
+REMOTE_JOB_DIR=$REMOTE_WORK_DIR/chipyard-$1
+REMOTE_SIM_DIR=$REMOTE_JOB_DIR/sims/verisim
 
 # set stricthostkeychecking to no (must happen before rsync)
 run "echo \"Ping $SERVER\""
 
-run "mkdir -p $JOB_DIR"
-run "cp -R $WORK_DIR/chipyard/ $JOB_DIR"
+run "mkdir -p $REMOTE_JOB_DIR"
+run "cp -R $REMOTE_CHIPYARD_DIR/. $REMOTE_JOB_DIR"
 
 # enter the verisim directory and build the specific config on remote server
-run "make -C $SIM_DIR clean"
-run "export RISCV=\"$WORK_DIR/riscv-tools-install\"; echo \"$RISCV\"; make -C $SIM_DIR VERILATOR_INSTALL_DIR=$WORK_DIR/verilator JAVA_ARGS=\"-Xmx8G -Xss8M\" SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem"
+run "make -C $REMOTE_SIM_DIR clean"
+run "export RISCV=\"$REMOTE_RISCV_DIR\"; echo \"$RISCV\"; make -C $REMOTE_SIM_DIR VERILATOR_INSTALL_DIR=$REMOTE_VERILATOR_DIR JAVA_ARGS=\"-Xmx8G -Xss8M\" SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem"
 
 # copy back the final build
-copy $SERVER:$JOB_DIR/chipyard $HOME/chipyard
+copy $SERVER:$REMOTE_JOB_DIR/ $LOCAL_CHIPYARD_DIR

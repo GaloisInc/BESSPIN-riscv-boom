@@ -11,6 +11,6 @@ SIM=${SIM_BASE}${CONFIG}
 AMT_RUNS=$2
 
 # run csmith utility
-cd $HOME/project/util/csmith
+cd $LOCAL_CHECKOUT_DIR/util/csmith
 ./install-csmith.sh
-./run-csmith.sh --sim $HOME/chipyard/sims/verisim/$SIM --run $AMT_RUNS --nodebug
+./run-csmith.sh --sim $LOCAL_SIM_DIR/$SIM --run $AMT_RUNS --nodebug

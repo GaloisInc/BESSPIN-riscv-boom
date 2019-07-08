@@ -6,7 +6,7 @@ FROM openjdk:11.0.1-jdk-sid
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
 RUN apt-get update \
     && mkdir -p /usr/share/man/man1 \
-    && apt-get install -y \ 
+    && apt-get install -y \
                bzip2 \
                ca-certificates \
                curl \
@@ -146,6 +146,7 @@ ENV HOME="/home/riscvuser"
 
 # Update PATH for RISCV toolchain (note: hardcoded for CircleCI)
 ENV RISCV="$HOME/riscv-tools-install"
+ENV LD_LIBRARY_PATH="$RISCV/lib"
 ENV PATH="$RISCV/bin:$PATH"
 
 # smoke test with path
