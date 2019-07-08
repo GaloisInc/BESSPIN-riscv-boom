@@ -20,7 +20,7 @@ run "cp -R $WORK_DIR/chipyard/ $JOB_DIR"
 
 # enter the verisim directory and build the specific config on remote server
 run "make -C $SIM_DIR clean"
-run "make -C $SIM_DIR RISCV=$WORK_DIR/riscv-tools-install VERILATOR_INSTALL_DIR=$WORK_DIR/verilator JAVA_ARGS=\"-Xmx8G -Xss8M\" SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem"
+run "export RISCV=\"$WORK_DIR/riscv-tools-install\"; echo \"$RISCV\"; make -C $SIM_DIR VERILATOR_INSTALL_DIR=$WORK_DIR/verilator JAVA_ARGS=\"-Xmx8G -Xss8M\" SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem"
 
 # copy back the final build
 copy $SERVER:$JOB_DIR/chipyard $HOME/chipyard
