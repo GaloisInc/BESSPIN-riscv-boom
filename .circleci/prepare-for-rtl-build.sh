@@ -30,11 +30,14 @@ if [ ! -d "$LOCAL_VERILATOR_DIR" ] && [ ! -d "$LOCAL_CHIPYARD_DIR" ]; then
     # set stricthostkeychecking to no (must happen before rsync)
     run "echo \"Ping $SERVER\""
 
+    run "mkdir -p $REMOTE_CHIPYARD_DIR"
     copy $LOCAL_CHIPYARD_DIR/ $SERVER:$REMOTE_CHIPYARD_DIR
 
     run "make -C $REMOTE_CHIPYARD_DIR/sims/verisim VERILATOR_INSTALL_DIR=$REMOTE_VERILATOR_DIR verilator_install"
 
     # copy so that circleci can cache
+    mkdir -p $LOCAL_CHIPYARD_DIR
+    mkdir -p $LOCAL_VERILATOR_DIR
     copy $SERVER:$REMOTE_CHIPYARD_DIR/  $LOCAL_CHIPYARD_DIR
     copy $SERVER:$REMOTE_VERILATOR_DIR/ $LOCAL_VERILATOR_DIR
 

@@ -23,4 +23,5 @@ run "make -C $REMOTE_SIM_DIR clean"
 run "export RISCV=\"$REMOTE_RISCV_DIR\"; echo \"$RISCV\"; make -C $REMOTE_SIM_DIR VERILATOR_INSTALL_DIR=$REMOTE_VERILATOR_DIR JAVA_ARGS=\"-Xmx8G -Xss8M\" SUB_PROJECT=boom CONFIG=$1 TOP=BoomRocketSystem"
 
 # copy back the final build
+mkdir -p $LOCAL_CHIPYARD_DIR
 copy $SERVER:$REMOTE_JOB_DIR/ $LOCAL_CHIPYARD_DIR
