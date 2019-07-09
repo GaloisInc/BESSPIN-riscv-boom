@@ -10,11 +10,11 @@ SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 source $SCRIPT_DIR/defaults.sh
 
 run_bmark () {
-    make run-bmark-tests-fast -C $LOCAL_SIM_DIR VERILATOR_INSTALL_DIR=$LOCAL_VERILATOR_DIR SUB_PROJECT=boom TOP=BoomRocketSystem CONFIG=$1
+    make run-bmark-tests-fast -C $LOCAL_SIM_DIR VERILATOR_INSTALL_DIR=$LOCAL_VERILATOR_DIR SUB_PROJECT=boom CONFIG=$1
 }
 
 run_asm () {
-    make run-asm-tests-fast -C $LOCAL_SIM_DIR VERILATOR_INSTALL_DIR=$LOCAL_VERILATOR_DIR SUB_PROJECT=boom TOP=BoomRocketSystem CONFIG=$1
+    make run-asm-tests-fast -C $LOCAL_SIM_DIR VERILATOR_INSTALL_DIR=$LOCAL_VERILATOR_DIR SUB_PROJECT=boom CONFIG=$1
 }
 
 run_both () {
