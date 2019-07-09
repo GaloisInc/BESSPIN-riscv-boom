@@ -5,6 +5,10 @@
 # turn echo on and error on earliest command
 set -ex
 
+# get shared variables
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+source $SCRIPT_DIR/defaults.sh
+
 SIM_BASE=simulator-boom.system-
 CONFIG=$1
 SIM=${SIM_BASE}${CONFIG}
