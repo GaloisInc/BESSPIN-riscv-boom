@@ -106,7 +106,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
   val dec_brmask_logic = Module(new BranchMaskGenerationLogic(coreWidth))
   val rename_stage     = Module(new RenameStage(coreWidth, numIntRenameWakeupPorts, numFpWakeupPorts))
   val issue_units      = new boom.exu.IssueUnits(numIntIssueWakeupPorts)
-  val dispatcher       = Module(new BasicDispatcher)
+  val dispatcher       = Module(new CompactingDispatcher)
 
   val iregfile         = if (enableCustomRf) {
                            Module(new RegisterFileSeqCustomArray(
