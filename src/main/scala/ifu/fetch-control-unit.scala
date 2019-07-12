@@ -365,11 +365,10 @@ class FetchControlUnit(implicit p: Parameters) extends BoomModule
     val last_idx  = Mux(inLastChunk(f3_fetch_bundle.pc) && icIsBanked.B,
                       (fetchWidth/2-1).U, (fetchWidth-1).U)
     prev_is_half := (usingCompressed.B
-    && !(f3_valid_mask(last_idx-1.U) && f3_fetch_bundle.insts(last_idx-1.U)(1,0) === 3.U)
-    && !f3_kill_mask(last_idx)
-    && f3_btb_mask(last_idx)
-    && f3_bpd_mask(last_idx)
-    && f3_fetch_bundle.insts(last_idx)(1,0) === 3.U)
+                    && !(f3_valid_mask(last_idx-1.U) && f3_fetch_bundle.insts(last_idx-1.U)(1,0) === 3.U)
+                    && f3_fetch_bundle.insts(last_idx)(1,0) === 3.U
+                    && !f3_req.valid
+                    && f3_btb_mask(last_idx))
     prev_half    := f3_fetch_bundle.insts(last_idx)(15,0)
     prev_nextpc  := alignToFetchBoundary(f3_fetch_bundle.pc) + Mux(inLastChunk(f3_fetch_bundle.pc) && icIsBanked.B,
                                                                  bankBytes.U,
