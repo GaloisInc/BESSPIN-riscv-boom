@@ -27,6 +27,8 @@ class DispatchIO(implicit p: Parameters) extends BoomBundle
   // incoming microops from rename2
   val ren_uops = Vec(coreWidth, Flipped(DecoupledIO(new MicroOp)))
 
+  val can_fire = Input(Vec(coreWidth, Bool()))
+
   // outgoing microops to issue queues
   // N issues each accept up to dispatchWidth uops
   // dispatchWidth may vary between issue queues
@@ -57,7 +59,8 @@ class BasicDispatcher(implicit p: Parameters) extends Dispatcher
     val issueParam = issueParams(i)
     val dis        = io.dis_uops(i)
 
-    dis(w).valid := io.ren_uops(w).valid && ((io.ren_uops(w).bits.iq_type & issueParam.iqType.U) =/= 0.U)
+    dis(w).valid := io.ren_uops(w).valid && io.can_fire(w) &&
+                    ((io.ren_uops(w).bits.iq_type & issueParam.iqType.U) =/= 0.U)
     dis(w).bits  := io.ren_uops(w).bits
   }
 }
@@ -71,8 +74,10 @@ class CompactingDispatcher(implicit p: Parameters) extends Dispatcher
 
   val ren_readys = Wire(Vec(issueParams.size, UInt(coreWidth.W)))
 
-  for (((ip, dis), rdy) <- issueParams zip io.dis_uops zip ren_readys) {
-    val ren = Wire(Vec(coreWidth, Decoupled(new MicroOp)))
+  for (((ip, dis_io), rdy) <- issueParams zip io.dis_uops zip ren_readys) {
+    val ren = Wire(Vec(       coreWidth, Decoupled(new MicroOp)))
+    val dis = Wire(Vec(ip.dispatchWidth, Decoupled(new MicroOp)))
+
     ren <> io.ren_uops
 
     val uses_iq = ren map (u => (u.bits.iq_type & ip.iqType.U).orR)
@@ -81,8 +86,12 @@ class CompactingDispatcher(implicit p: Parameters) extends Dispatcher
       u.valid := v.valid && q}
 
     val compactor = Module(new Compactor(coreWidth, ip.dispatchWidth, new MicroOp))
+
     compactor.io.in  <> ren
     dis <> compactor.io.out
+
+    dis_io <> dis
+    dis_io zip dis zip io.can_fire foreach {case ((dio,d),c) => dio.valid := d.valid && c}
 
     rdy := VecInit(ren zip uses_iq map {case (u,q) => u.ready || !q}).asUInt
   }
