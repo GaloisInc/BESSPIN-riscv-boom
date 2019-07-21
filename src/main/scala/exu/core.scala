@@ -405,6 +405,7 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
                       || rob.io.commit.rollback
                       || branch_mask_full(w)
                       || !rename_stage.io.inst_can_proceed(w)
+                      || !fp_rename_stage.io.inst_can_proceed(w)
                       || flush_ifu))
 
   val dec_stalls = dec_hazards.scanLeft(false.B) ((s,h) => s || h).takeRight(coreWidth)
