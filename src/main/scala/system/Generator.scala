@@ -62,7 +62,8 @@ object RegressionTestSuites
  */
 object TestSuiteHelper
 {
-  import freechips.rocketchip.system.DefaultTestSuites._
+  import freechips.rocketchip.system.DefaultTestSuites
+  import DefaultTestSuites._
   import RegressionTestSuites._
 
   /**
@@ -97,14 +98,13 @@ object TestSuiteHelper
 
       // Include our BOOM-specific overrides.
       val (rvi, rvu) =
-        if (xlen == 64) ((if (vm) BoomTestSuites.rv64i else BoomTestSuites.rv64pi), rv64u)
+        if (xlen == 64) ((if (vm) DefaultTestSuites.rv64i else DefaultTestSuites.rv64pi), rv64u)
         else            ((if (vm) rv32i else rv32pi), rv32u)
 
       TestGeneration.addSuites(rvi.map(_("p")))
       TestGeneration.addSuites(rvu.map(_("p")))
       TestGeneration.addSuites((if (vm) List("v") else List()).flatMap(env => rvu.map(_(env))))
       TestGeneration.addSuite(benchmarks)
-      rv64RegrTestNames -= "rv64mi-p-breakpoint" // TODO: breakpoints not implemented yet
       TestGeneration.addSuite(new RegressionTestSuite(if (xlen == 64) rv64RegrTestNames else rv32RegrTestNames))
     }
   }

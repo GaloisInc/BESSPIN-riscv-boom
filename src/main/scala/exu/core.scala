@@ -307,6 +307,10 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
   io.ifu.br_unit := br_unit
   io.ifu.tsc_reg := debug_tsc_reg
 
+  // Breakpoint info
+  io.ifu.status  := csr.io.status
+  io.ifu.bp      := csr.io.bp
+
   // SFence needs access to the PC to inject an address into the TLB's CAM port. The ROB
   // will have to later redirect the PC back to the regularly scheduled program.
   io.ifu.sfence_take_pc    := lsu.io.exe_resp.bits.sfence.valid
@@ -1000,6 +1004,10 @@ class BoomCore(implicit p: Parameters, edge: freechips.rocketchip.tilelink.TLEdg
   exe_units(brunit_idx).io.get_ftq_pc.next_val       := RegNext(io.ifu.get_pc.next_val)
   exe_units(brunit_idx).io.get_ftq_pc.next_pc        := RegNext(io.ifu.get_pc.next_pc)
   exe_units(brunit_idx).io.status := csr.io.status
+
+  // Connect breakpoint info to memaddrcalcunit
+  exe_units.memory_unit.io.status := csr.io.status
+  exe_units.memory_unit.io.bp     := csr.io.bp
 
   // LSU <> ROB
   rob.io.lsu_clr_bsy_valid      := lsu.io.clr_bsy_valid

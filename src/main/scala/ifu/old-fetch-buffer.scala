@@ -21,18 +21,11 @@ import chisel3.experimental.{dontTouch}
 import chisel3.core.{DontCare}
 
 import freechips.rocketchip.config.{Parameters}
+import freechips.rocketchip.rocket.{BP, MStatus, BreakpointUnit}
 
 import boom.common._
 import boom.util.{BoolToChar}
 
-/**
- * Bundle that is made up of converted MicroOps from the Fetch Bundle
- * input to the Fetch Buffer. This is handed to the Decode stage.
- */
-/*class FetchBufferResp(implicit p: Parameters) extends BoomBundle
-{
-  val uops = Vec(coreWidth, Valid(new MicroOp()))
-}*/
 
 /**
  * Buffer to hold fetched packets and convert them into a vector of MicroOps
@@ -50,6 +43,10 @@ class OldFetchBuffer(numEntries: Int)(implicit p: Parameters) extends BoomModule
 
     // Was the pipeline redirected? Clear/reset the fetchbuffer.
     val clear = Input(Bool())
+
+    // Breakpoint info
+    val status = Input(new MStatus)
+    val bp = Input(Vec(nBreakpoints, new BP))
   })
 
   require (isPow2(numEntries))
@@ -87,12 +84,18 @@ class OldFetchBuffer(numEntries: Int)(implicit p: Parameters) extends BoomModule
 
   // Step 1. Convert input FetchPacket into an array of MicroOps.
   for (i <- 0 until fetchWidth) {
+    val pc = (alignToFetchBoundary(io.enq.bits.pc) + (i << log2Ceil(coreInstBytes)).U)
+    val bkptu = Module(new BreakpointUnit(nBreakpoints))
+    bkptu.io.status := io.status
+    bkptu.io.bp     := io.bp
+    bkptu.io.pc     := pc
+    bkptu.io.ea     := DontCare
+
     in_uops(i)                := DontCare
     in_mask(i)                := io.enq.valid && io.enq.bits.mask(i)
     in_uops(i).edge_inst      := false.B
-    in_uops(i).pc             := (alignToFetchBoundary(io.enq.bits.pc)
-                                + (i << log2Ceil(coreInstBytes)).U)
-    in_uops(i).pc_lob         := in_uops(i).pc // LHS width will cut off high-order bits.
+    in_uops(i).pc             := pc
+    in_uops(i).pc_lob         := pc // LHS width will cut off high-order bits.
     in_uops(i).cfi_idx        := i.U
     if (i == 0) {
       when (io.enq.bits.edge_inst) {
@@ -106,10 +109,14 @@ class OldFetchBuffer(numEntries: Int)(implicit p: Parameters) extends BoomModule
     in_uops(i).inst           := io.enq.bits.exp_insts(i)
     in_uops(i).debug_inst     := io.enq.bits.insts(i)
     in_uops(i).is_rvc         := io.enq.bits.insts(i)(1,0) =/= 3.U && usingCompressed.B
+
     in_uops(i).xcpt_pf_if     := io.enq.bits.xcpt_pf_if
     in_uops(i).xcpt_ae_if     := io.enq.bits.xcpt_ae_if
     in_uops(i).replay_if      := io.enq.bits.replay_if
     in_uops(i).xcpt_ma_if     := io.enq.bits.xcpt_ma_if_oh(i)
+    in_uops(i).bp_debug_if    := bkptu.io.debug_if
+    in_uops(i).bp_xcpt_if     := bkptu.io.xcpt_if
+
     in_uops(i).br_prediction  := io.enq.bits.bpu_info(i)
     in_uops(i).debug_events   := io.enq.bits.debug_events(i)
   }
