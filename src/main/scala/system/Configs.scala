@@ -82,11 +82,6 @@ class MegaBoomConfig extends Config(
   new freechips.rocketchip.system.BaseConfig)
 
 // Assorted configs
-class MegaBoomECCConfig extends Config(
-  new WithL1IECC("parity", "parity") ++
-  new WithL1DECC("identity", "parity") ++
-  new MegaBoomConfig)
-
 class jtagSmallBoomConfig extends Config(
   new WithJtagDTM ++
   new SmallBoomConfig)
