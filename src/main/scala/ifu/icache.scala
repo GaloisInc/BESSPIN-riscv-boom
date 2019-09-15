@@ -113,6 +113,8 @@ class ICacheModule(outer: ICache) extends ICacheBaseModule(outer)
   val (tl_out, edge_out) = outer.masterNode.out(0)
 
   require(isPow2(nSets) && isPow2(nWays))
+  require(usingVM)
+  require(pgIdxBits >= untagBits)
 
   // How many bits do we intend to fetch at most every cycle?
   val wordBits = outer.icacheParams.fetchBytes*8
@@ -124,6 +126,7 @@ class ICacheModule(outer: ICache) extends ICacheBaseModule(outer)
   // refill writes to only one bank per cycle (instead of across two banks every
   // cycle).
   val refillsToOneBank = (2*tl_out.d.bits.data.getWidth == wordBits)
+
 
   val s0_valid = io.req.fire()
   val s0_vaddr = io.req.bits.addr
@@ -180,11 +183,17 @@ class ICacheModule(outer: ICache) extends ICacheBaseModule(outer)
     s1_tag_hit(i) := s1_vb && tag === s1_tag
   }
   assert(PopCount(s1_tag_hit) <= 1.U)
-  val ramDepth = nSets * refillCycles / nBanks
+
+  val ramDepth = if (refillsToOneBank && nBanks == 2) {
+    nSets * refillCycles / 2
+  } else {
+    nSets * refillCycles
+  }
+
 
   if (nBanks == 1) {
     val dataArrays = (0 until nWays).map { x =>
-       SyncReadMem(nSets * refillCycles, UInt(wordBits.W)).suggestName(
+       SyncReadMem(ramDepth, UInt(wordBits.W)).suggestName(
           "dataArrayWay_" + x.toString)
     }
     s1_bankid := 0.U
