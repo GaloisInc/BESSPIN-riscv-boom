@@ -53,6 +53,7 @@ class GetPCFromFtqIO(implicit p: Parameters) extends BoomBundle
 {
   val ftq_idx  = Input(UInt(log2Ceil(ftqSz).W))
   val fetch_pc = Output(UInt(vaddrBitsExtended.W))
+  val com_pc   = Output(UInt(vaddrBitsExtended.W))
   // the next_pc may not be valid (stalled or still being fetched)
   val next_val = Output(Bool())
   val next_pc  = Output(UInt(vaddrBitsExtended.W))
@@ -112,10 +113,11 @@ class FetchTargetQueue(num_entries: Int)(implicit p: Parameters) extends BoomMod
   }
 
   //-------------------------------------------------------------
-  // **** BranchResolutionUnit Read ****
+  // **** Core Read PCs ****
   //-------------------------------------------------------------
 
   io.get_ftq_pc.fetch_pc := ram.read(io.get_ftq_pc.ftq_idx).fetch_pc
   io.get_ftq_pc.next_pc  := ram.read(WrapInc(io.get_ftq_pc.ftq_idx, num_entries)).fetch_pc
   io.get_ftq_pc.next_val := WrapInc(io.get_ftq_pc.ftq_idx, num_entries) =/= enq_ptr
+  io.get_ftq_pc.com_pc   := ram.read(Mux(io.deq.valid, io.deq.bits, deq_ptr)).fetch_pc
 }

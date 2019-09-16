@@ -348,10 +348,19 @@ class BoomCore(implicit p: Parameters) extends BoomModule
 
   // Tell the FTQ it can deallocate entries by passing youngest ftq_idx.
   val youngest_com_idx = (coreWidth-1).U - PriorityEncoder(rob.io.commit.valids.reverse)
-  io.ifu.commit.valid := rob.io.commit.valids.reduce(_|_)
-  io.ifu.commit.bits  := rob.io.commit.uops(youngest_com_idx).ftq_idx
+  io.ifu.commit.valid := rob.io.commit.valids.reduce(_|_) || rob.io.com_xcpt.valid
+  io.ifu.commit.bits  := Mux(rob.io.com_xcpt.valid,
+                             rob.io.com_xcpt.bits.ftq_idx,
+                             rob.io.commit.uops(youngest_com_idx).ftq_idx)
 
-  io.ifu.sfence := RegNext(io.lsu.exe.req.bits.sfence)
+  assert(!(rob.io.commit.valids.reduce(_|_) && rob.io.com_xcpt.valid),
+    "ROB can't commit and except in same cycle!")
+
+  for (i <- 0 until memWidth) {
+    when (RegNext(io.lsu.exe(i).req.bits.sfence.valid)) {
+      io.ifu.sfence := RegNext(io.lsu.exe(i).req.bits.sfence)
+    }
+  }
 
   //-------------------------------------------------------------
   //-------------------------------------------------------------
@@ -418,6 +427,7 @@ class BoomCore(implicit p: Parameters) extends BoomModule
   bru_pc_req.valid := RegNext(iss_valids(brunit_idx))
   bru_pc_req.bits  := RegNext(iss_uops(brunit_idx).ftq_idx)
   exe_units(brunit_idx).io.get_ftq_pc.fetch_pc := io.ifu.get_pc.fetch_pc
+  exe_units(brunit_idx).io.get_ftq_pc.com_pc   := DontCare // This shouldn't be used by brunit
   exe_units(brunit_idx).io.get_ftq_pc.next_val := io.ifu.get_pc.next_val
   exe_units(brunit_idx).io.get_ftq_pc.next_pc  := io.ifu.get_pc.next_pc
 
@@ -822,7 +832,7 @@ class BoomCore(implicit p: Parameters) extends BoomModule
   csr.io.exception := RegNext(rob.io.com_xcpt.valid)
   // csr.io.pc used for setting EPC during exception or CSR.io.trace.
 
-  csr.io.pc        := (boom.util.AlignPCToBoundary(io.ifu.get_pc.fetch_pc, icBlockBytes)
+  csr.io.pc        := (boom.util.AlignPCToBoundary(io.ifu.get_pc.com_pc, icBlockBytes)
                      + RegNext(rob.io.com_xcpt.bits.pc_lob)
                      - Mux(RegNext(rob.io.com_xcpt.bits.edge_inst), 2.U, 0.U))
   // Cause not valid for for CALL or BREAKPOINTs (CSRFile will override it).
