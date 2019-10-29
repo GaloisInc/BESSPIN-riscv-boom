@@ -3,8 +3,10 @@
 # turn echo on and error on earliest command
 set -ex
 
-run_manager
-    cd $REMOTE_AWS_MARSHAL_DIR
+# get shared variables
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+source $SCRIPT_DIR/defaults.sh
 
-    ./marshal build workloads/fedora-test.json
-    ./marshal install workloads/fedora-test.json
+run_aws "cd $REMOTE_AWS_MARSHAL_DIR \
+         ./marshal build test/fed-test.json \
+         ./marshal install test/fed-test.json"

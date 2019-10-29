@@ -3,9 +3,10 @@
 # turn echo on and error on earliest command
 set -ex
 
-run_manager
-    cd $REMOTE_AWS_MARSHAL_DIR
-    git checkout MY_HASH_WITH_THE_CAT_PROC_STUFF
+# get shared variables
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+source $SCRIPT_DIR/defaults.sh
 
-    ./marshal build workloads/br-base-test.json
-    ./marshal install workloads/br-base-test.json
+run_aws "cd $REMOTE_AWS_MARSHAL_DIR \
+         ./marshal build test/smoke1.json \
+         ./marshal install test/smoke1.json"

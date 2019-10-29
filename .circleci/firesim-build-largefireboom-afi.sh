@@ -8,17 +8,17 @@
 # turn echo on and error on earliest command
 set -ex
 
+# get shared variables
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+source $SCRIPT_DIR/defaults.sh
+
 if [ ! -d "$HOME/largefireboom_hwdb.ini" ]; then
     copy $LOCAL_CHECKOUT_DIR/.circleci/firesim-configs $SERVER_AWS:$REMOTE_AWS_FSIM_DEPLOY_DIR
 
-    run_manager
-        # setup firesim
-        cd $REMOTE_AWS_FSIM_DIR
-        source sourceme_f1_manager.sh
-
-        # start a afi build
-        cd deploy
-        firesim buildafi -b $REMOTE_AWS_FSIM_DEPLOY_DIR/firesim-configs/config_build.ini -r $REMOTE_AWS_FSIM_DEPLOY_DIR/firesim-configs/config_build_recipes.ini 
+    run_aws "cd $REMOTE_AWS_FSIM_DIR \
+             source sourceme_f1_manager.sh \
+             cd deploy \
+             firesim buildafi -b $REMOTE_AWS_FSIM_DEPLOY_DIR/firesim-configs/config_build.ini -r $REMOTE_AWS_FSIM_DEPLOY_DIR/firesim-configs/config_build_recipes.ini"
 
     # copy over hwdb entry
     copy $SERVER_AWS:$REMOTE_AWS_FSIM_DEPLOY_DIR/built-hwdb-entries/ $HOME/
