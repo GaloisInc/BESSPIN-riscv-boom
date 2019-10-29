@@ -24,7 +24,10 @@ git fetch
 git checkout $(cat $LOCAL_CHECKOUT_DIR/CHIPYARD.hash)
 ./scripts/init-submodules-no-riscv-tools.sh
 ./scripts/firesim-setup.sh --fast
+cd $REMOTE_AWS_FSIM_DIR
+source sourceme_f1_manager.sh
 firesim managerinit <<EOD
+
 
 
 
