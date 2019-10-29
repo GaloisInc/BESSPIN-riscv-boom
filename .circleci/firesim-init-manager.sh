@@ -36,6 +36,6 @@ EOF
 #         git checkout -C $REMOTE_AWS_MARSHAL_DIR MY_HASH_WITH_THE_CAT_PROC_STUFF"
 
 chmod +x $LOCAL_CHECKOUT_DIR/firesim-manager-setup.sh
-run_script_aws $LOCAL_CHECKOUT_DIR/firesim-manager-script.sh
+run_script_aws $LOCAL_CHECKOUT_DIR/firesim-manager-setup.sh
 
 copy $LOCAL_CHECKOUT_DIR $AWS_SERVER:$REMOTE_AWS_CHIPYARD_DIR/generators/boom/
