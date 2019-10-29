@@ -33,7 +33,7 @@ run () {
 }
 
 run_script () {
-    run_script $SERVER $1 $2
+    run_script_impl $SERVER $1 $2
 }
 
 clean () {
@@ -48,7 +48,7 @@ run_aws () {
 }
 
 run_script_aws () {
-    run_script $AWS_SERVER $1 $2
+    run_script_impl $AWS_SERVER $1 $2
 }
 
 #############
