@@ -1,75 +1,41 @@
 #include <vpi_user.h>
 #include <svdpi.h>
 
-#include <stdio.h>
+#include "dromajo.h"
 
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include "dromajo_cosim.h"
+dromajo_t *dromajo = 0;
 
-#define MAX_ARGS 15
-
-extern "C" dromajo_cosim_state_t* dromajo_cosim_init_wrapper(
-        char* binary_name,
-        char* bootrom_name,
-        char* dtb_name,
-        char* mmio_start,
-        char* mmio_end)
+extern "C" int dromajo_init(
+    char* binary_name,
+    char* bootrom_name,
+    char* reset_vector,
+    char* dtb_name,
+    char* mmio_start,
+    char* mmio_end)
 {
-    char *local_argv[MAX_ARGS];
-    char local_argc = 0;
-
-    local_argv[local_argc] = (char*)"./dromajo";
-    local_argc += 1;
-    local_argv[local_argc] = (char*)"--compact_bootrom";
-    local_argc += 1;
-    local_argv[local_argc] = (char*)"--reset_vector";
-    local_argc += 1;
-    local_argv[local_argc] = (char*)"0x00010040";
-    local_argc += 1;
-
-    if (strlen(binary_name) != 0) {
-        local_argv[local_argc] = (char*)binary_name;
-        local_argc += 1;
-    }
-    if (strlen(bootrom_name) != 0) {
-        local_argv[local_argc] = (char*)"--bootrom";
-        local_argc += 1;
-        local_argv[local_argc] = (char*)bootrom_name;
-        local_argc += 1;
-    }
-    if (strlen(dtb_name) != 0) {
-        local_argv[local_argc] = (char*)"--dtb";
-        local_argc += 1;
-        local_argv[local_argc] = (char*)dtb_name;
-        local_argc += 1;
-    }
-    if (strlen(mmio_start) != 0) {
-        local_argv[local_argc] = (char*)"--mmio_start";
-        local_argc += 1;
-        local_argv[local_argc] = (char*)mmio_start;
-        local_argc += 1;
-    }
-    if (strlen(mmio_end) != 0) {
-        local_argv[local_argc] = (char*)"--mmio_end";
-        local_argc += 1;
-        local_argv[local_argc] = (char*)mmio_end;
-        local_argc += 1;
-    }
-
-    if (MAX_ARGS < local_argc) {
-        printf("[DEBUG] Too many arguments\n");
-        exit(1);
-    }
-
-    static dromajo_cosim_state_t* retval = dromajo_cosim_init(local_argc, local_argv);
-    if (retval) {
-        printf("[DEBUG] Completed Dromajo initialization\n");
-    } else {
+    dromajo = new dromajo_t(binary_name, bootrom_name, reset_vector, dtb_name, mmio_start, mmio_end);
+    if (!(dromajo->valid_state())) {
         printf("[DEBUG] Failed Dromajo initialization\n");
-        exit(1);
+        return 1;
     }
 
-    return retval;
+    return 0;
+}
+
+extern "C" int dromajo_step(
+    int      hartid,
+    uint64_t dut_pc,
+    uint32_t dut_insn,
+    uint64_t dut_wdata,
+    uint64_t mstatus,
+    bool     check)
+{
+    return dromajo->step(hartid, dut_pc, dut_insn, dut_wdata, mstatus, check);
+}
+
+extern "C" void dromajo_raise_trap(
+    int     hartid,
+    int64_t cause)
+{
+    dromajo->raise_trap(hartid, cause);
 }

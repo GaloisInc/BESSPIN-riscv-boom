@@ -16,13 +16,17 @@ package boom.util
 
 import chisel3._
 import chisel3.util._
-import chisel3.core.IntParam
+import chisel3.core.{IntParam, StringParam}
 
 /**
  * Connect to the Dromajo Cosimulation Tool
  */
-class DromajoCosimBlackbox(commit_width: Int, xLen: Int)
-  extends BlackBox(Map("COMMIT_WIDTH" -> IntParam(commit_width), "XLEN" -> IntParam(xLen)))
+class DromajoCosimBlackbox(commit_width: Int, xLen: Int, bootrom_name: String, reset_vector: String)
+  extends BlackBox(Map(
+    "COMMIT_WIDTH" -> IntParam(commit_width),
+    "XLEN" -> IntParam(xLen),
+    "BOOTROM_NAME" -> StringParam(bootrom_name),
+    "RESET_VECTOR" -> StringParam(reset_vector)))
   with HasBlackBoxResource
 {
   val inst_sz = 32
@@ -44,4 +48,6 @@ class DromajoCosimBlackbox(commit_width: Int, xLen: Int)
 
   addResource("/vsrc/dromajo_cosim.v")
   addResource("/csrc/dromajo_cosim.cc")
+  addResource("/csrc/dromajo.cc")
+  addResource("/csrc/dromajo.h")
 }
