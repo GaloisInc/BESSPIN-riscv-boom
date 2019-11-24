@@ -1396,8 +1396,8 @@ class BoomCore(implicit p: Parameters) extends BoomModule
       // These csr signals do not exactly match up with the ROB commit signals.
       io.trace(w).priv       := csr.io.status.prv
       // Can determine if it is an interrupt or not based on the MSB of the cause
-      io.trace(w).exception  := rob.io.com_xcpt.valid && !rob.io.comm_xcpt.bits.cause(xLen - 1)
-      io.trace(w).interrupt  := rob.io.com_xcpt.valid && rob.io.comm_xcpt.bits.cause(xLen - 1)
+      io.trace(w).exception  := rob.io.com_xcpt.valid && !rob.io.com_xcpt.bits.cause(xLen - 1)
+      io.trace(w).interrupt  := rob.io.com_xcpt.valid && rob.io.com_xcpt.bits.cause(xLen - 1)
       io.trace(w).cause      := rob.io.com_xcpt.bits.cause
       io.trace(w).tval       := csr.io.tval
     }
