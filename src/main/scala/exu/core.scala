@@ -1304,8 +1304,6 @@ class BoomCore(implicit p: Parameters) extends BoomModule
         val clintBase = "0x" + f"${clintParams.baseAddress}%X"
         val clintSize = "0x" + f"${CLINTConsts.size}%X"
 
-        println(s"[DEBUG] $resetVectorStr $bootromFile $mmioStart $mmioEnd $plicBase $plicSize $clintBase $clintSize")
-
         // instantiate dromajo cosim bbox
         val dromajo = Module(new DromajoCosimBlackBox(
           coreWidth,
