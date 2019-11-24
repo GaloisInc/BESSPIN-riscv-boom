@@ -1,20 +1,21 @@
 #ifndef __DROMAJO_H
 #define __DROMAJO_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "dromajo_cosim.h"
 
 #define MAX_ARGS 15
+#define MAX_STR_LEN 24
 
 class dromajo_t
 {
     public:
         dromajo_t(
-            char* binary_name,
-            char* bootrom_name,
-            char* reset_vector,
-            char* dtb_name,
-            char* mmio_start,
-            char* mmio_end
+            int argc,
+            char *argv[]
         );
 
         ~dromajo_t();
@@ -37,6 +38,6 @@ class dromajo_t
 
     private:
         dromajo_cosim_state_t *state;
-}
+};
 
 #endif // __DROMAJO_H

@@ -5,7 +5,7 @@
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-// Dromajo Cosimulation Blackbox
+// Dromajo Cosimulation BlackBox
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 //
@@ -21,12 +21,29 @@ import chisel3.core.{IntParam, StringParam}
 /**
  * Connect to the Dromajo Cosimulation Tool
  */
-class DromajoCosimBlackbox(commit_width: Int, xLen: Int, bootrom_name: String, reset_vector: String)
+class DromajoCosimBlackBox(
+  commitWidth: Int,
+  xLen: Int,
+  bootromFile: String,
+  resetVector: String,
+  mmioStart: String,
+  mmioEnd: String,
+  plicBase: String,
+  plicSize: String,
+  clintBase: String,
+  clintSize: String)
   extends BlackBox(Map(
-    "COMMIT_WIDTH" -> IntParam(commit_width),
+    "COMMIT_WIDTH" -> IntParam(commitWidth),
     "XLEN" -> IntParam(xLen),
-    "BOOTROM_NAME" -> StringParam(bootrom_name),
-    "RESET_VECTOR" -> StringParam(reset_vector)))
+    "BOOTROM_FILE" -> StringParam(bootromFile),
+    "RESET_VECTOR" -> StringParam(resetVector),
+    "MMIO_START" -> StringParam(mmioStart),
+    "MMIO_END" -> StringParam(mmioEnd),
+    "PLIC_BASE" -> StringParam(plicBase),
+    "PLIC_SIZE" -> StringParam(plicSize),
+    "CLINT_BASE" -> StringParam(clintBase),
+    "CLINT_SIZE" -> StringParam(clintSize)
+  ))
   with HasBlackBoxResource
 {
   val inst_sz = 32
@@ -34,13 +51,13 @@ class DromajoCosimBlackbox(commit_width: Int, xLen: Int, bootrom_name: String, r
     val clock = Input(Clock())
     val reset = Input(Bool())
 
-    val valid   = Input(UInt(        (commit_width).W))
+    val valid   = Input(UInt(        (commitWidth).W))
     val hartid  = Input(UInt(                (xLen).W))
-    val pc      = Input(UInt(   (xLen*commit_width).W))
-    val inst    = Input(UInt((inst_sz*commit_width).W))
-    val wdata   = Input(UInt(   (xLen*commit_width).W))
-    val mstatus = Input(UInt(   (xLen*commit_width).W))
-    val check   = Input(UInt(        (commit_width).W))
+    val pc      = Input(UInt(   (xLen*commitWidth).W))
+    val inst    = Input(UInt((inst_sz*commitWidth).W))
+    val wdata   = Input(UInt(   (xLen*commitWidth).W))
+    val mstatus = Input(UInt(   (xLen*commitWidth).W))
+    val check   = Input(UInt(        (commitWidth).W))
 
     val int_xcpt = Input(      Bool())
     val cause    = Input(UInt(xLen.W))

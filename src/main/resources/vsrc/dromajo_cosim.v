@@ -1,12 +1,16 @@
 `define INST_LEN 32
 
 import "DPI-C" function int dromajo_init(
-    input string binary_name,
-    input string bootrom_name,
+    input string binary_file,
+    input string bootrom_file,
     input string reset_vector,
-    input string dtb_name,
+    input string dtb_file,
     input string mmio_start,
-    input string mmio_end
+    input string mmio_end,
+    input string plic_base,
+    input string plic_size,
+    input string clint_base,
+    input string clint_size
 );
 
 import "DPI-C" function int dromajo_step(
@@ -18,13 +22,13 @@ import "DPI-C" function int dromajo_step(
     input bit     check
 );
 
-import "DPI-C" function void dromajo_cosim_raise_trap(
+import "DPI-C" function void dromajo_raise_trap(
     input int     hartid,
     input longint cause
 );
 
-module DromajoCosimBlackbox
-    #(parameter COMMIT_WIDTH, XLEN, __BOOTROM_NAME, RESET_VECTOR)
+module DromajoCosimBlackBox
+    #(parameter COMMIT_WIDTH, XLEN, BOOTROM_FILE, RESET_VECTOR, MMIO_START, MMIO_END, PLIC_BASE, PLIC_SIZE, CLINT_BASE, CLINT_SIZE)
 (
     input clock,
     input reset,
@@ -40,36 +44,33 @@ module DromajoCosimBlackbox
     input           int_xcpt,
     input [XLEN - 1:0] cause
 );
-    string __binary_name, __bootrom_name, __dtb_name, __mmio_start, __mmio_end;
+    string __binary_file, __dtb_file, __mmio_start, __mmio_end;
     int __itr, __fail;
 
     initial begin
-        $display("[DEBUG] Setting up Dromajo Cosimulation");
-        if ($value$plusargs ("drj_binary_name=%s", __binary_name)) begin
-            $display("[DEBUG] __binary_name=%s", __binary_name);
+        // need binary file or dromajo will error
+        if (!$value$plusargs("drj_binary_file=%s", __binary_file)) begin
+            __binary_file = "";
         end
-        if ($value$plusargs ("drj_dtb_name=%s", __dtb_name)) begin
-            $display("[DEBUG] __dtb_name=%s", __dtb_name);
-        end
-        if ($value$plusargs ("drj_mmio_start=%s", __mmio_start)) begin
-            $display("[DEBUG] __mmio_start=%s", __mmio_start);
-        end
-        if ($value$plusargs ("drj_mmio_end=%s", __mmio_end)) begin
-            $display("[DEBUG] __mmio_end=%s", __mmio_end);
+        // optional dtb param
+        if (!$value$plusargs("drj_dtb_file=%s", __dtb_file)) begin
+            __dtb_file = "";
         end
         __fail = dromajo_init(
-            __binary_name,
-            __BOOTROM_NAME,
+            __binary_file,
+            BOOTROM_FILE,
             RESET_VECTOR,
-            __dtb_name,
-            __mmio_start,
-            __mmio_end);
+            __dtb_file,
+            MMIO_START,
+            MMIO_END,
+            PLIC_BASE,
+            PLIC_SIZE,
+            CLINT_BASE,
+            CLINT_SIZE);
         if (__fail) begin
             $display("FAIL: Dromajo Simulation Failed");
             $fatal;
         end
-
-        $display("[DEBUG] Done setting up Dromajo Cosimulation");
     end
 
     always @(posedge clock) begin
@@ -84,14 +85,14 @@ module DromajoCosimBlackbox
                         mstatus[((__itr+1)*XLEN - 1)-:XLEN],
                         check[__itr]);
                     if (__fail) begin
-                        $display("FAIL: Dromajo Simulation Failed");
+                        $display("FAIL: Dromajo Simulation Failed with exit code: %d", __fail);
                         $fatal;
                     end
                 end
             end
 
             if (int_xcpt) begin
-                dromajo_cosim_raise_trap(
+                dromajo_raise_trap(
                     hartid,
                     cause
                 );
