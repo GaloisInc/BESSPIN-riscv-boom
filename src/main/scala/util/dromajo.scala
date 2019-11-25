@@ -46,18 +46,19 @@ class DromajoCosimBlackBox(
   ))
   with HasBlackBoxResource
 {
-  val inst_sz = 32
+  val instBits = 32
+  val maxHartIdBits = 32
   val io = IO(new Bundle {
     val clock = Input(Clock())
     val reset = Input(Bool())
 
-    val valid   = Input(UInt(        (commitWidth).W))
-    val hartid  = Input(UInt(                (xLen).W))
-    val pc      = Input(UInt(   (xLen*commitWidth).W))
-    val inst    = Input(UInt((inst_sz*commitWidth).W))
-    val wdata   = Input(UInt(   (xLen*commitWidth).W))
-    val mstatus = Input(UInt(   (xLen*commitWidth).W))
-    val check   = Input(UInt(        (commitWidth).W))
+    val valid   = Input(UInt(         (commitWidth).W))
+    val hartid  = Input(UInt(       (maxHartIdBits).W))
+    val pc      = Input(UInt(    (xLen*commitWidth).W))
+    val inst    = Input(UInt((instBits*commitWidth).W))
+    val wdata   = Input(UInt(    (xLen*commitWidth).W))
+    val mstatus = Input(UInt(    (xLen*commitWidth).W))
+    val check   = Input(UInt(         (commitWidth).W))
 
     val int_xcpt = Input(      Bool())
     val cause    = Input(UInt(xLen.W))

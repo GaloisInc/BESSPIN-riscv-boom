@@ -1,4 +1,5 @@
 `define INST_LEN 32
+`define HARTID_LEN 32
 
 import "DPI-C" function int dromajo_init(
     input string binary_file,
@@ -34,7 +35,7 @@ module DromajoCosimBlackBox
     input reset,
 
     input [          (COMMIT_WIDTH) - 1:0] valid  ,
-    input [                  (XLEN) - 1:0] hartid ,
+    input [            (HARTID_LEN) - 1:0] hartid ,
     input [     (XLEN*COMMIT_WIDTH) - 1:0] pc     ,
     input [(`INST_LEN*COMMIT_WIDTH) - 1:0] inst   ,
     input [     (XLEN*COMMIT_WIDTH) - 1:0] wdata  ,
@@ -67,7 +68,7 @@ module DromajoCosimBlackBox
             PLIC_SIZE,
             CLINT_BASE,
             CLINT_SIZE);
-        if (__fail) begin
+        if (__fail != 0) begin
             $display("FAIL: Dromajo Simulation Failed");
             $fatal;
         end
@@ -84,7 +85,7 @@ module DromajoCosimBlackBox
                         wdata[((__itr+1)*XLEN - 1)-:XLEN],
                         mstatus[((__itr+1)*XLEN - 1)-:XLEN],
                         check[__itr]);
-                    if (__fail) begin
+                    if (__fail != 0) begin
                         $display("FAIL: Dromajo Simulation Failed with exit code: %d", __fail);
                         $fatal;
                     end
