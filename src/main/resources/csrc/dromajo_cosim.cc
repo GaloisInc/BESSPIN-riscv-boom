@@ -5,7 +5,7 @@
 
 #include "dromajo.h"
 
-#define MAX_ARGS 15
+#define MAX_ARGS 20
 #define MAX_STR_LEN 24
 
 dromajo_t *dromajo = 0;
@@ -32,6 +32,8 @@ extern "C" int dromajo_init(
     local_argv[local_argc] = (char*)"./dromajo";
     local_argc += 1;
     local_argv[local_argc] = (char*)"--compact_bootrom";
+    local_argc += 1;
+    local_argv[local_argc] = (char*)"--custom_extension";
     local_argc += 1;
     local_argv[local_argc] = (char*)"--reset_vector";
     local_argc += 1;
