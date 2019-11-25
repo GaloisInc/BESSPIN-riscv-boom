@@ -35,7 +35,7 @@ module DromajoCosimBlackBox
     input reset,
 
     input [          (COMMIT_WIDTH) - 1:0] valid  ,
-    input [            (HARTID_LEN) - 1:0] hartid ,
+    input [           (`HARTID_LEN) - 1:0] hartid ,
     input [     (XLEN*COMMIT_WIDTH) - 1:0] pc     ,
     input [(`INST_LEN*COMMIT_WIDTH) - 1:0] inst   ,
     input [     (XLEN*COMMIT_WIDTH) - 1:0] wdata  ,
