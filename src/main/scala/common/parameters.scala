@@ -64,7 +64,7 @@ case class BoomCoreParams(
 
   useFetchMonitor: Boolean = true,
   bootFreqHz: BigInt = 0,
-  fpu: Option[FPUParams] = Some(FPUParams()),
+  fpu: Option[FPUParams] = Some(FPUParams(sfmaLatency=4, dfmaLatency=4)),
   usingFPU: Boolean = true,
   haveBasicCounters: Boolean = true,
   misaWritable: Boolean = true,
