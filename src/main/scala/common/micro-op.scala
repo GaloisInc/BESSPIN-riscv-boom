@@ -141,6 +141,9 @@ class MicroOp(implicit p: Parameters) extends BoomBundle
   val debug_wdata      = UInt(xLen.W)
   val debug_events     = new DebugStageEvents
 
+  // for trace
+  val taken            = Bool()
+  val bj_addr          = UInt(vaddrBitsExtended.W)
 
   // Does this register write-back
   def rf_wen           = dst_rtype =/= RT_X

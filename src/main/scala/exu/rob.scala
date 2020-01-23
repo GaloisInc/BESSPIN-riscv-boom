@@ -366,6 +366,11 @@ class Rob(
       rob_uop(GetRowIdx(io.brinfo.rob_idx)).stat_bpd_made_pred      := io.brinfo.bpd_made_pred
     }
 
+    when (io.brinfo.trace_valid && MatchBank(GetBankIdx(io.brinfo.rob_idx))) {
+      rob_uop(GetRowIdx(io.brinfo.rob_idx)).taken   := io.brinfo.taken
+      rob_uop(GetRowIdx(io.brinfo.rob_idx)).bj_addr := io.brinfo.bj_addr
+    }
+
     //-----------------------------------------------
     // Accruing fflags
     for (i <- 0 until numFpuPorts) {

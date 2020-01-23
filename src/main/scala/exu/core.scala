@@ -73,6 +73,8 @@ class BoomCore(implicit p: Parameters) extends BoomModule
   //**********************************
   // construct all of the modules
 
+  val trace_stall = WireDefault(false.B)
+
   // Only holds integer-registerfile execution units.
   val exe_units = new boom.exu.ExecutionUnits(fpu=false)
 
@@ -557,7 +559,7 @@ class BoomCore(implicit p: Parameters) extends BoomModule
 
   val dis_hazards = (0 until coreWidth).map(w =>
                       dis_valids(w) &&
-                      (  !rob.io.ready
+                      (  !rob.io.ready || trace_stall
                       || ren_stalls(w)
                       || io.lsu.ldq_full(w) && dis_uops(w).uses_ldq
                       || io.lsu.stq_full(w) && dis_uops(w).uses_stq

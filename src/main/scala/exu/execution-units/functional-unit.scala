@@ -196,6 +196,10 @@ class BrResolutionInfo(implicit p: Parameters) extends BoomBundle
   val btb_mispredict = Bool()
   val bpd_made_pred  = Bool()
   val bpd_mispredict = Bool()
+
+  // for trace
+  val trace_valid = Bool()
+  val bj_addr = UInt(vaddrBitsExtended.W)
 }
 
 /**
@@ -505,7 +509,6 @@ class ALUUnit(isBranchUnit: Boolean = false, numStages: Int = 1, dataWidth: Int)
 
     val br_unit = RegInit((0.U).asTypeOf(new BranchUnitResp))
 
-
     br_unit.take_pc := mispredict
     val target = Mux(pc_sel === PC_PLUS4, npc, bj_addr)
     br_unit.target := target
@@ -536,6 +539,8 @@ class ALUUnit(isBranchUnit: Boolean = false, numStages: Int = 1, dataWidth: Int)
     brinfo.bpd_mispredict := bpd_mispredict
     brinfo.btb_made_pred  := uop.br_prediction.btb_blame
     brinfo.bpd_made_pred  := uop.br_prediction.bpd_blame
+    brinfo.bj_addr        := bj_addr
+    brinfo.trace_valid    := io.req.valid && uop.is_br_or_jmp && !killed
 
     br_unit.brinfo := brinfo
 
