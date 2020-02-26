@@ -16,11 +16,11 @@ This is taken from ``src/main/scala/common/parameters.scala``.
 Sample Configurations
 ---------------------
 
-Sample configurations of the core and the parameters used can be seen in ``src/main/scala/common/config-mixins.scala``.
+Sample configurations of the core and the parameters used can be seen in ``src/main/scala/common/config-fragments.scala``.
 The following code shows an example of the "Large BOOM Configuration".
 
 .. _large-boom-config:
-.. literalinclude:: ../../src/main/scala/common/config-mixins.scala
+.. literalinclude:: ../../src/main/scala/common/config-fragments.scala
     :language: scala
     :start-after: DOC include start: LargeBoomConfig
     :end-before: DOC include end: LargeBoomConfig
