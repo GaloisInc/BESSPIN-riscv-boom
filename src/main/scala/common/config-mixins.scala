@@ -105,22 +105,6 @@ class WithNBoomCores(n: Int) extends Config(
 )
 
 /**
- * Class to renumber BOOM + Rocket harts so that there are no overlapped harts
- * This mixin assumes Rocket tiles are numbered before BOOM tiles
- * Also makes support for multiple harts depend on Rocket + BOOM
- * Note: Must come after all harts are assigned for it to apply
- */
-class WithRenumberHarts(rocketFirst: Boolean = false) extends Config((site, here, up) => {
-  case RocketTilesKey => up(RocketTilesKey, site).zipWithIndex map { case (r, i) =>
-    r.copy(hartId = i + (if(rocketFirst) 0 else up(BoomTilesKey, site).length))
-  }
-  case BoomTilesKey => up(BoomTilesKey, site).zipWithIndex map { case (b, i) =>
-    b.copy(hartId = i + (if(rocketFirst) up(RocketTilesKey, site).length else 0))
-  }
-  case MaxHartIdBits => log2Up(up(BoomTilesKey, site).size + up(RocketTilesKey, site).size)
-})
-
-/**
  * Add a synchronous clock crossing to the tile boundary
  */
 class WithSynchronousBoomTiles extends Config((site, here, up) => {
