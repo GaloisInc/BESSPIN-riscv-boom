@@ -24,7 +24,7 @@ case object BoomTilesKey extends Field[Seq[BoomTileParams]](Nil)
 case object BoomCrossingKey extends Field[Seq[RocketCrossingParams]](List(RocketCrossingParams()))
 
 // ---------------------
-// BOOM Configs
+// BOOM Config Fragments
 // ---------------------
 
 /**
@@ -90,7 +90,7 @@ class WithTrace extends Config((site, here, up) => {
 
 /**
  * Create multiple copies of a BOOM tile (and thus a core).
- * Override with the default mixins to control all params of the tiles.
+ * Override with the default fragments to control all params of the tiles.
  * Default adds small BOOMs.
  *
  * @param n amount of tiles to duplicate
