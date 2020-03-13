@@ -332,6 +332,7 @@ class WithCS152BaselineBooms extends Config((site, here, up) => {
 
         // DO NOT CHANGE BELOW
         enableBranchPrintf = true,
+        enableDispatchPrintf = false,
         decodeWidth = coreWidth,
         numFetchBufferEntries = coreWidth * 8,
         numDCacheBanks = memWidth,
@@ -370,6 +371,7 @@ class WithCS152DefaultBooms extends Config((site, here, up) => {
 
         // DO NOT CHANGE BELOW
         enableBranchPrintf = true,
+        enableDispatchPrintf = false,
         decodeWidth = coreWidth,
         numFetchBufferEntries = coreWidth * 8,
         numDCacheBanks = memWidth,
