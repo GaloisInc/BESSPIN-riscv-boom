@@ -37,7 +37,7 @@ class IssueUnitCollapsing(
 
   val maxShift = dispatchWidth
   val vacants = issue_slots.map(s => !(s.valid)) ++ io.dis_uops.map(_.valid).map(!_.asBool)
-  val shamts_oh = Array.fill(numIssueSlots+dispatchWidth) {Wire(UInt(width=maxShift.W))}
+  val shamts_oh = Wire(Vec(numIssueSlots+dispatchWidth, UInt(width=maxShift.W)))
   // track how many to shift up this entry by by counting previous vacant spots
   def SaturatingCounterOH(count_oh:UInt, inc: Bool, max: Int): UInt = {
      val next = Wire(UInt(width=max.W))
@@ -75,17 +75,11 @@ class IssueUnitCollapsing(
     }
     issue_slots(i).clear        := shamts_oh(i) =/= 0.U
   }
-
-  //-------------------------------------------------------------
-  // Dispatch/Entry Logic
-  // did we find a spot to slide the new dispatched uops into?
-
-  val will_be_available = (0 until numIssueSlots).map(i =>
-                            (!issue_slots(i).will_be_valid || issue_slots(i).clear) && !(issue_slots(i).in_uop.valid))
-  val num_available = PopCount(will_be_available)
-  for (w <- 0 until dispatchWidth) {
-    io.dis_uops(w).ready := RegNext(num_available > w.U)
+  for (i <- 0 until dispatchWidth) {
+    val j = i + numIssueSlots
+    io.dis_uops(i).ready := (shamts_oh(j) >> i) =/= 0.U
   }
+
 
   //-------------------------------------------------------------
   // Issue Select Logic

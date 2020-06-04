@@ -44,10 +44,8 @@ class BasicDispatcher(implicit p: Parameters) extends Dispatcher
 {
   issueParams.map(ip=>require(ip.dispatchWidth == coreWidth))
 
-  val ren_readys = io.dis_uops.map(d=>VecInit(d.map(_.ready)).asUInt).reduce(_&_)
-
   for (w <- 0 until coreWidth) {
-    io.ren_uops(w).ready := ren_readys(w)
+    io.ren_uops(w).ready := io.dis_uops.map(d => d(w).ready).reduce(_&&_)
   }
 
   for {i <- 0 until issueParams.size
