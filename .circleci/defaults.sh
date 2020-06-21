@@ -96,7 +96,7 @@ clean_aws () {
 #############
 
 # make parallelism
-CI_MAKE_NPROC=8
+CI_MAKE_NPROC=4
 # chosen based on a 24c system shared with 1 other project
 REMOTE_MAKE_NPROC=4
 
