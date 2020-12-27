@@ -489,10 +489,15 @@ jobs:
         executor: main-env
         steps:
             - run:
-                name: Install Git Push Script
+                name: Install Git push fork branch script
                 command: |
-                    curl -sL https://raw.githubusercontent.com/jklukas/git-push-fork-to-upstream-branch/master/git-push-fork-to-upstream-branch > /usr/local/bin/git-push-fork-to-upstream-branch
-                    chmod 755 /usr/local/bin/git-push-fork-to-upstream-branch
+                    GPF_INSTALL_DIR=$HOME/install
+                    GPF_INSTALL_LOCATION=$GPF_INSTALL_DIR/git-push-fork-to-upstream-branch
+                    GPF_URL=https://raw.githubusercontent.com/jklukas/git-push-fork-to-upstream-branch/master/git-push-fork-to-upstream-branch
+                    curl -sL $GPF_URL > $GPF_INSTALL_LOCATION
+                    chmod 755 $GPF_INSTALL_LOCATION
+                    echo 'export PATH=$GPF_INSTALL_DIR:$PATH' >> $BASH_ENV
+                    source $BASH_ENV
 
             - ssh-checkout
 
